@@ -1,0 +1,22 @@
+:root {
+  --acc: #bc4b2b; --acc-dark: #97371d; --ink: #20262d; --ink2: #5a626b; --line: #e5e2dc;
+  --bg: #fbfaf7; --bg2: #f2f0eb; --navy: #1b222b;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 16px; line-height: 1.5; }
+.gora { background: var(--navy); color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
+.gora small { font-weight: 400; color: #b9b2a6; font-size: 13px; }
+main { max-width: 640px; margin: 0 auto; padding: 24px 20px 40px; }
+/* Tokeny komponentu zmapowane na tokeny landingu — tak samo robi każdy landing. */
+.ka { --ka-akcent: var(--acc); --ka-akcent-ciemny: var(--acc-dark); --ka-tekst: var(--ink); --ka-tekst-slaby: var(--ink2);
+      --ka-linia: var(--line); --ka-tlo: var(--bg); --ka-tlo-2: var(--bg2); --ka-font: inherit; }
+.dane { display: flex; flex-direction: column; gap: 16px; }
+.dane h1 { font-size: 26px; margin: 0; }
+.dane h2 { font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: var(--acc); margin: 8px 0 0; }
+.dane dl { margin: 0; display: grid; grid-template-columns: minmax(120px, 1fr) 2fr; gap: 8px 12px; background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 14px 16px; }
+.dane dt { color: var(--ink2); font-size: 14px; }
+.dane dd { margin: 0; font-weight: 600; }
+.dane details { font-size: 13px; }
+.dane pre { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 12px; overflow: auto; max-height: 360px; font-size: 12px; }
+.btn { display: inline-block; border: 0; border-radius: 4px; padding: 14px 22px; background: var(--acc); color: #fff; font-weight: 600; font-size: 16px; cursor: pointer; font-family: inherit; }
+.uwaga { background: var(--bg2); border-left: 3px solid var(--acc); padding: 12px 16px; font-size: 14.5px; color: var(--ink2); }

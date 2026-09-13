@@ -1,0 +1,64 @@
+/* mirr-krok-adres — style komponentu. Kolory i kroje WYŁĄCZNIE przez zmienne --ka-*;
+   landing mapuje je na swoje tokeny (np. .ka { --ka-akcent: var(--acc) }). */
+.ka {
+  --ka-akcent: #bc4b2b;
+  --ka-akcent-ciemny: #97371d;
+  --ka-tekst: #20262d;
+  --ka-tekst-slaby: #5a626b;
+  --ka-linia: #e5e2dc;
+  --ka-tlo: #fbfaf7;
+  --ka-tlo-2: #f2f0eb;
+  --ka-font: inherit;
+  --ka-promien: 4px;
+  font-family: var(--ka-font);
+  color: var(--ka-tekst);
+  line-height: 1.5;
+}
+.ka-ekran { display: flex; flex-direction: column; gap: 14px; }
+.ka-krok { font-size: 12.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--ka-akcent); }
+.ka-naglowek { font-size: 28px; line-height: 1.15; margin: 0; font-weight: 600; }
+.ka-podpowiedz { margin: 0; color: var(--ka-tekst-slaby); font-size: 15.5px; }
+.ka-pole-adres { position: relative; }
+.ka-input { width: 100%; box-sizing: border-box; border: 1px solid var(--ka-linia); border-radius: var(--ka-promien); padding: 14px 16px; font-size: 17px; font-family: inherit; background: #fff; color: var(--ka-tekst); }
+.ka-input:focus { outline: 2px solid var(--ka-akcent); outline-offset: -1px; border-color: var(--ka-akcent); }
+.ka-lista { list-style: none; margin: 6px 0 0; padding: 0; border: 1px solid var(--ka-linia); border-radius: var(--ka-promien); background: #fff; overflow: hidden; }
+.ka-pozycja { padding: 13px 16px; cursor: pointer; border-top: 1px solid var(--ka-linia); font-size: 16px; }
+.ka-pozycja:first-child { border-top: 0; }
+.ka-pozycja:hover, .ka-pozycja-aktywna { background: var(--ka-tlo-2); }
+.ka-laduje { font-size: 13.5px; color: var(--ka-tekst-slaby); margin-top: 6px; }
+.ka-link { background: none; border: 0; padding: 8px 0; color: var(--ka-akcent-ciemny); font-weight: 600; font-size: 14.5px; cursor: pointer; font-family: inherit; text-align: left; }
+.ka-reczny { display: flex; flex-direction: column; gap: 12px; }
+.ka-etykieta { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 14.5px; }
+.ka-komunikat { margin: 0; color: var(--ka-akcent-ciemny); font-size: 14px; font-weight: 600; }
+.ka-btn { display: inline-block; width: 100%; box-sizing: border-box; border: 1px solid transparent; border-radius: var(--ka-promien); padding: 15px 22px; font-size: 16px; font-weight: 600; font-family: inherit; cursor: pointer; text-align: center; }
+.ka-btn-glowny { background: var(--ka-akcent); color: #fff; }
+.ka-btn-glowny:hover { background: var(--ka-akcent-ciemny); }
+.ka-btn-glowny[disabled] { opacity: .5; cursor: not-allowed; }
+.ka-btn-drugi { background: #fff; color: var(--ka-tekst); border-color: var(--ka-tekst); }
+.ka-btn-drugi:hover { background: var(--ka-tlo-2); }
+.ka-nawigacja { display: flex; flex-direction: column; gap: 10px; position: sticky; bottom: 0; background: var(--ka-tlo); padding: 12px 0 8px; border-top: 1px solid var(--ka-linia); z-index: 90; }
+.ka-wstecz { background: none; border: 0; color: var(--ka-tekst-slaby); font-size: 14.5px; cursor: pointer; font-family: inherit; padding: 6px 0; text-align: left; }
+.ka-pomin { text-align: center; }
+.ka-stopka { margin: 0; font-size: 13px; color: var(--ka-tekst-slaby); }
+.ka-mapa { width: 100%; height: min(60vh, 520px); min-height: 280px; border-radius: var(--ka-promien); overflow: hidden; background: var(--ka-tlo-2); touch-action: none; }
+.ka-panel { border: 1px solid var(--ka-linia); border-radius: var(--ka-promien); background: #fff; padding: 4px 16px; }
+.ka-panel-wiersz { display: grid; grid-template-columns: 1fr auto; column-gap: 12px; align-items: baseline; padding: 11px 0; border-top: 1px solid var(--ka-linia); }
+.ka-panel-wiersz:first-child { border-top: 0; }
+.ka-panel-etykieta { font-size: 14px; color: var(--ka-tekst-slaby); }
+.ka-panel-wartosc { font-size: 18px; font-weight: 600; text-align: right; }
+.ka-panel-opis { grid-column: 1 / -1; font-size: 13px; color: var(--ka-tekst-slaby); }
+.ka-popraw { grid-column: 1 / -1; justify-self: end; padding: 2px 0; }
+.ka-kondygnacje-pytanie { padding: 10px 0; }
+.ka-pytanie { margin: 0 0 10px; font-weight: 600; }
+.ka-opcje { display: grid; gap: 10px; }
+.ka-opcja { display: block; width: 100%; text-align: left; background: #fff; border: 1px solid var(--ka-linia); border-radius: var(--ka-promien); padding: 14px 16px; font-size: 16px; font-weight: 600; color: var(--ka-tekst); cursor: pointer; font-family: inherit; }
+.ka-opcja:hover, .ka-opcja-wybrana { border-color: var(--ka-akcent); }
+.ka-opcja-wybrana { box-shadow: inset 0 0 0 1px var(--ka-akcent); }
+@media (min-width: 600px) {
+  .ka-naglowek { font-size: 32px; }
+  .ka-nawigacja-mapa { flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .ka-nawigacja-mapa .ka-btn { width: auto; flex: 1 1 auto; }
+  .ka-nawigacja-mapa .ka-wstecz { flex-basis: 100%; }
+}
+/* Geoman: przyciski trybu rysowania są nasze (ka-btn), ukrywamy pasek Geomana */
+.leaflet-pm-toolbar { display: none; }

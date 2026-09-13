@@ -1,0 +1,41 @@
+{
+  "name": "mirr-krok-adres",
+  "version": "0.1.0",
+  "description": "Krok adresu dla landingów kalkulatorowych MIRR: podpowiedzi adresu, dom na ortofotomapie z obrysem i kondygnacjami z ewidencji, komplet danych publicznych o nieruchomości",
+  "license": "UNLICENSED",
+  "private": false,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles.css",
+    "./package.json": "./package.json"
+  },
+  "files": ["src", "README.md"],
+  "sideEffects": ["*.css"],
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "dependencies": {
+    "@geoman-io/leaflet-geoman-free": "^2.20.1",
+    "leaflet": "^1.9.4"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@types/geojson": "^7946.0.16",
+    "@types/leaflet": "^1.9.22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "jsdom": "^29.1.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "typescript": "^5",
+    "vitest": "^3.2.4"
+  }
+}

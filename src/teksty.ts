@@ -1,0 +1,49 @@
+import type { Teksty } from './typy';
+
+/** Teksty domyślne (forma Ty, po polsku, bez żargonu). Landing nadpisuje wybrane przez props.teksty. */
+export const DOMYSLNE_TEKSTY: Teksty = {
+  krok: 'Krok {x} z {y}',
+  naglowekAdres: 'Gdzie stoi Twój dom?',
+  podpowiedzAdres: 'Wystarczy ulica i numer. Za chwilę pokażemy Ci ten dom na mapie.',
+  poleAdres: 'Ulica i numer, np. Klonowa 7',
+  przyciskPokaz: 'Pokaż mój dom na mapie',
+  nieMaNaLiscie: 'Nie ma mojego adresu na liście',
+  poleUlica: 'Ulica i numer',
+  poleKod: 'Kod pocztowy',
+  poleMiasto: 'Miejscowość',
+  przyciskSzukaj: 'Znajdź na mapie',
+  pomin: 'Wolę podać powierzchnię ręcznie',
+  stopkaAdres: 'Adres służy tylko do znalezienia domu i policzenia wyceny. Nie trafia do żadnej bazy poza naszą.',
+  szukamy: 'Szukamy Twojego domu w ewidencji budynków…',
+  naglowekMapa: 'To ten dom?',
+  obrysZEwidencji: '{adres}. Obrys wzięliśmy z ewidencji budynków.',
+  obwod: 'Obwód budynku',
+  zObrysu: 'z obrysu',
+  rzut: 'Powierzchnia zabudowy',
+  kondygnacje: 'Kondygnacje',
+  popraw: 'Popraw',
+  zgadzaSie: 'Zgadza się, dalej',
+  zaznaczeSam: 'Zaznaczę dom sam',
+  notaMapa:
+    'Obrys i liczba kondygnacji pochodzą z ewidencji budynków. Jeśli dom jest nowszy niż zdjęcie albo coś się nie zgadza, dotknij „Zaznaczę dom sam” i obrysuj go palcem po rogach albo „Popraw” przy kondygnacjach.',
+  brakObrysu: 'Nie znaleźliśmy tego domu w ewidencji. Zaznacz go sam: dotknij kolejno rogi domu na zdjęciu.',
+  zaznaczNaMapie: 'Zaznacz dom na mapie',
+  rysowanie: 'Dotykaj kolejno rogi domu. Ostatni róg dotknij dwa razy, żeby zamknąć obrys.',
+  cofnij: 'Cofnij',
+  ileKondygnacji: 'Ile kondygnacji ma dom?',
+  kondygnacjeOpcje: ['Parter', 'Parter i piętro', 'Dwa piętra lub więcej'],
+  dalej: 'Dalej',
+  wstecz: 'Wstecz',
+  nieZnaleziono: 'Nie udało się znaleźć tego adresu na mapie. Podasz powierzchnię ręcznie.',
+};
+
+export function opisKondygnacji(n: number | null): string {
+  if (n === null) return 'nie wiemy';
+  if (n === 1) return 'dom parterowy';
+  if (n === 2) return 'parter i piętro';
+  return `${n} kondygnacje`;
+}
+
+export function wstaw(szablon: string, wartosci: Record<string, string | number>): string {
+  return szablon.replace(/\{(\w+)\}/g, (_, k) => String(wartosci[k] ?? ''));
+}
