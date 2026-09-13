@@ -9,7 +9,7 @@ function fetchMock() {
   return vi.fn(async (url: string) => {
     const u = new URL(url, 'http://localhost');
     if (u.pathname.endsWith('/podpowiedzi')) {
-      return { ok: true, json: async () => ({ podpowiedzi: [{ tekst: 'Klonowa 7, Sosnowiec 41-218', ulica: 'Klonowa', numer: '7', kod: '41-218', miasto: 'Sosnowiec', lat: 50.27, lon: 19.16 }] }) };
+      return { ok: true, json: async () => ({ podpowiedzi: [{ rodzaj: 'adres', tekst: 'Klonowa 7, Sosnowiec 41-218', ulica: 'Klonowa', numer: '7', kod: '41-218', miasto: 'Sosnowiec', lat: 50.27, lon: 19.16 }] }) };
     }
     if (u.pathname.endsWith('/budynek')) {
       expect(u.searchParams.get('lat')).toBe('50.27');

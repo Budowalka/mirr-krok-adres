@@ -2,6 +2,8 @@ import type { Polygon } from 'geojson';
 
 /** Jedna pozycja z listy podpowiedzi (MIRR GET /api/v1/geo/podpowiedzi). */
 export type Podpowiedz = {
+  /** adres = punkt z numerem domu; ulica = sama ulica, klient dopisuje numer */
+  rodzaj: 'adres' | 'ulica';
   tekst: string;
   ulica: string;
   numer: string | null;
@@ -79,7 +81,8 @@ export type WynikKrokuAdresu = {
   powiat: OdpowiedzBudynek['powiat'];
 };
 
-export type ZrodloKafli = { typ: 'wms' } | { typ: 'xyz'; url: string; atrybucja?: string };
+/** wmts (domyślne, Geoportal, szybkie) · wms (Geoportal, 2–3 s na kafel) · xyz (inny dostawca) */
+export type ZrodloKafli = { typ: 'wmts' } | { typ: 'wms' } | { typ: 'xyz'; url: string; atrybucja?: string };
 
 export type LiniaPanelu = { etykieta: string; wartosc: string; opis?: string };
 
@@ -90,6 +93,7 @@ export type Teksty = {
   poleAdres: string;
   przyciskPokaz: string;
   nieMaNaLiscie: string;
+  dopiszNumer: string;
   poleUlica: string;
   poleKod: string;
   poleMiasto: string;

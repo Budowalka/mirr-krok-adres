@@ -18,7 +18,7 @@ export function KrokAdresu({
   wysokoscKondygnacji = 3,
   linia,
   teksty,
-  zrodloKafli = { typ: 'wms' },
+  zrodloKafli = { typ: 'wmts' },
   numerKroku,
   onGotowe,
   onPomin,

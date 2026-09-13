@@ -42,7 +42,7 @@ function renderuj(odpowiedz: OdpowiedzBudynek | Error, props: Partial<Parameters
   const onGotowe = vi.fn();
   const onPomin = vi.fn();
   render(
-    <EkranMapy api={api} adres={ADRES} teksty={DOMYSLNE_TEKSTY} wysokoscKondygnacji={3} adapter={() => adapter} zrodloKafli={{ typ: 'wms' }}
+    <EkranMapy api={api} adres={ADRES} teksty={DOMYSLNE_TEKSTY} wysokoscKondygnacji={3} adapter={() => adapter} zrodloKafli={{ typ: 'wmts' }}
       pokazMape onGotowe={onGotowe} onPomin={onPomin} onWstecz={vi.fn()} {...props} />
   );
   return { adapter, api, onGotowe, onPomin };

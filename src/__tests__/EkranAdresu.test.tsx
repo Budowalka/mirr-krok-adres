@@ -6,10 +6,10 @@ import { DOMYSLNE_TEKSTY } from '../teksty';
 import type { Podpowiedz } from '../typy';
 
 const KLONOWA: Podpowiedz[] = [
-  { tekst: 'Klonowa 7, Czeladź 41-250', ulica: 'Klonowa', numer: '7', kod: '41-250', miasto: 'Czeladź', lat: 50.32, lon: 19.08 },
-  { tekst: 'Klonowa 7, Będzin 42-500', ulica: 'Klonowa', numer: '7', kod: '42-500', miasto: 'Będzin', lat: 50.33, lon: 19.13 },
-  { tekst: 'Klonowa 7, Sosnowiec 41-218', ulica: 'Klonowa', numer: '7', kod: '41-218', miasto: 'Sosnowiec', lat: 50.27, lon: 19.16 },
-  { tekst: 'Klonowa 7, Katowice 40-168', ulica: 'Klonowa', numer: '7', kod: '40-168', miasto: 'Katowice', lat: 50.27, lon: 19.03 },
+  { rodzaj: 'adres', tekst: 'Klonowa 7, Czeladź 41-250', ulica: 'Klonowa', numer: '7', kod: '41-250', miasto: 'Czeladź', lat: 50.32, lon: 19.08 },
+  { rodzaj: 'adres', tekst: 'Klonowa 7, Będzin 42-500', ulica: 'Klonowa', numer: '7', kod: '42-500', miasto: 'Będzin', lat: 50.33, lon: 19.13 },
+  { rodzaj: 'adres', tekst: 'Klonowa 7, Sosnowiec 41-218', ulica: 'Klonowa', numer: '7', kod: '41-218', miasto: 'Sosnowiec', lat: 50.27, lon: 19.16 },
+  { rodzaj: 'adres', tekst: 'Klonowa 7, Katowice 40-168', ulica: 'Klonowa', numer: '7', kod: '40-168', miasto: 'Katowice', lat: 50.27, lon: 19.03 },
 ];
 
 type ApiTestowe = Api & { podpowiedzi: ReturnType<typeof vi.fn> };
@@ -79,6 +79,27 @@ describe('EkranAdresu', () => {
     fireEvent.change(screen.getByPlaceholderText('np. Klonowa 7'), { target: { value: 'Nieistniejąca 99' } });
     fireEvent.click(screen.getByText('Znajdź na mapie'));
     await waitFor(() => expect(onPomin).toHaveBeenCalledWith(DOMYSLNE_TEKSTY.nieZnaleziono));
+  });
+
+  it('wybór ulicy (bez numeru) wstawia ją do pola i pyta ponownie, zamiast kończyć krok', async () => {
+    const onWybrano = vi.fn();
+    const a = api(async (q: string) =>
+      q.startsWith('Franciszka Brzezińskiego')
+        ? [{ rodzaj: 'adres', tekst: 'Franciszka Brzezińskiego 26A, Pruszków 05-800', ulica: 'Franciszka Brzezińskiego', numer: '26A', kod: '05-800', miasto: 'Pruszków', lat: 52.17, lon: 20.8 }]
+        : [{ rodzaj: 'ulica', tekst: 'Franciszka Brzezińskiego, Pruszków 05-800', ulica: 'Franciszka Brzezińskiego', numer: null, kod: '05-800', miasto: 'Pruszków', lat: 52.17, lon: 20.8 }]
+    );
+    render(<EkranAdresu api={a} bias={undefined} teksty={DOMYSLNE_TEKSTY} onWybrano={onWybrano} onPomin={vi.fn()} />);
+    const pole = screen.getByPlaceholderText('Ulica i numer, np. Klonowa 7') as HTMLInputElement;
+    fireEvent.change(pole, { target: { value: 'franciszka brze' } });
+    await act(async () => { vi.advanceTimersByTime(300); await Promise.resolve(); });
+    expect(screen.getByText('dopisz numer domu')).toBeTruthy();
+    fireEvent.click(screen.getByRole('option'));
+    expect(onWybrano).not.toHaveBeenCalled();
+    expect(pole.value).toBe('Franciszka Brzezińskiego ');
+    fireEvent.change(pole, { target: { value: 'Franciszka Brzezińskiego 26' } });
+    await act(async () => { vi.advanceTimersByTime(300); await Promise.resolve(); });
+    fireEvent.click(screen.getByRole('option'));
+    expect(onWybrano).toHaveBeenCalledWith(expect.objectContaining({ numer: '26A', miasto: 'Pruszków' }));
   });
 
   it('„Wolę podać powierzchnię ręcznie” woła onPomin', () => {

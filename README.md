@@ -30,7 +30,7 @@ Spec: `smova-3/docs/superpowers/specs/2026-09-13-komponent-krok-adres-design.md`
 ## Instalacja w landingu (Next 15, React 19)
 
 ```bash
-npm i github:Budowalka/mirr-krok-adres#v0.1.1 leaflet @geoman-io/leaflet-geoman-free
+npm i github:Budowalka/mirr-krok-adres#v0.1.2 leaflet @geoman-io/leaflet-geoman-free
 ```
 
 `next.config.ts`:
@@ -73,8 +73,8 @@ Tokeny stylu w `globals.css` landingu:
 ```
 
 `pokazMape={false}` = tylko krok adresu (dane publiczne i tak są zbierane; pytanie o kondygnacje,
-gdy ewidencja ich nie zna). `zrodloKafli={{ typ: 'xyz', url: '…/{z}/{y}/{x}' }}` podmienia WMS
-Geoportalu (2–3 s na kafel) na szybsze kafle innego dostawcy.
+gdy ewidencja ich nie zna). Kafle domyślnie z WMTS Geoportalu (0,1 s na kafel); `zrodloKafli={{ typ: 'wms' }}` przełącza na WMS
+(2–3 s), `{ typ: 'xyz', url }` na innego dostawcę.
 
 ## Kontrakt wyjścia
 

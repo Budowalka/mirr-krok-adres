@@ -25,6 +25,7 @@
 .ka-pozycja { padding: 13px 16px; cursor: pointer; border-top: 1px solid var(--ka-linia); font-size: 16px; }
 .ka-pozycja:first-child { border-top: 0; }
 .ka-pozycja:hover, .ka-pozycja-aktywna { background: var(--ka-tlo-2); }
+.ka-pozycja-opis { display: block; font-size: 13px; color: var(--ka-tekst-slaby); }
 .ka-laduje { font-size: 13.5px; color: var(--ka-tekst-slaby); margin-top: 6px; }
 .ka-link { background: none; border: 0; padding: 8px 0; color: var(--ka-akcent-ciemny); font-weight: 600; font-size: 14.5px; cursor: pointer; font-family: inherit; text-align: left; }
 .ka-reczny { display: flex; flex-direction: column; gap: 12px; }

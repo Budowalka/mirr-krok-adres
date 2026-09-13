@@ -8,6 +8,7 @@ export const DOMYSLNE_TEKSTY: Teksty = {
   poleAdres: 'Ulica i numer, np. Klonowa 7',
   przyciskPokaz: 'Pokaż mój dom na mapie',
   nieMaNaLiscie: 'Nie ma mojego adresu na liście',
+  dopiszNumer: 'dopisz numer domu',
   poleUlica: 'Ulica i numer',
   poleKod: 'Kod pocztowy',
   poleMiasto: 'Miejscowość',

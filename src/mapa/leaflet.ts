@@ -4,6 +4,9 @@ import type { AdapterMapy } from './adapter';
 import type { ZrodloKafli } from '../typy';
 
 const WMS_ORTO = 'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution';
+// WMTS Geoportalu w siatce EPSG:3857 = zwykłe kafle XYZ, 0,1 s na kafel (WMS: 2–3 s).
+const WMTS_ORTO =
+  'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMTS/StandardResolution?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTOFOTOMAPA&STYLE=default&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=EPSG:3857:{z}&TILEROW={y}&TILECOL={x}';
 
 /**
  * Prawdziwa mapa: Leaflet + Geoman (rysowanie po rogach, dotyk) + ortofotomapa
@@ -17,6 +20,26 @@ export function utworzAdapterLeaflet(): AdapterMapy {
   let warstwaObrysu: Leaflet.GeoJSON | null = null;
   let warstwaDzialki: Leaflet.GeoJSON | null = null;
   let onNarysowano: ((obrys: Polygon) => void) | null = null;
+  // Odpowiedź z MIRR bywa szybsza niż dynamiczny import Leafleta: obrys czeka tu na mapę
+  // (bez tego rysowanie i przybliżenie ginęły — zrzut Piotra 13.09: zdjęcie „daleko”, bez obrysu).
+  let oczekujacy: { obrys: Polygon | null; dzialka: Polygon | null } | null = null;
+
+  function narysuj(obrys: Polygon | null, dzialka: Polygon | null) {
+    if (!L || !mapa) return;
+    warstwaObrysu?.remove();
+    warstwaDzialki?.remove();
+    warstwaObrysu = null;
+    warstwaDzialki = null;
+    if (dzialka) {
+      warstwaDzialki = L.geoJSON(dzialka, { style: { color: '#ffffff', weight: 1.5, dashArray: '4 4', fillOpacity: 0.04, interactive: false } }).addTo(mapa);
+    }
+    if (obrys) {
+      warstwaObrysu = L.geoJSON(obrys, { style: { color: kolorAkcentu(mapa.getContainer()), weight: 3, fillOpacity: 0.18, interactive: false } }).addTo(mapa);
+      mapa.fitBounds(warstwaObrysu.getBounds(), { padding: [40, 40], maxZoom: 20 });
+    } else if (warstwaDzialki) {
+      mapa.fitBounds(warstwaDzialki.getBounds(), { padding: [30, 30], maxZoom: 20 });
+    }
+  }
 
   return {
     async zamontuj(el, { centrum, zrodloKafli }) {
@@ -41,22 +64,17 @@ export function utworzAdapterLeaflet(): AdapterMapy {
         (mapa as unknown as { pm: { disableDraw(): void } }).pm.disableDraw();
         cb?.(geom);
       });
+      if (oczekujacy) {
+        narysuj(oczekujacy.obrys, oczekujacy.dzialka);
+        oczekujacy = null;
+      }
     },
     pokazObrys(obrys, dzialka) {
-      if (!L || !mapa) return;
-      warstwaObrysu?.remove();
-      warstwaDzialki?.remove();
-      warstwaObrysu = null;
-      warstwaDzialki = null;
-      if (dzialka) {
-        warstwaDzialki = L.geoJSON(dzialka, { style: { color: '#ffffff', weight: 1.5, dashArray: '4 4', fillOpacity: 0.04, interactive: false } }).addTo(mapa);
+      if (!L || !mapa) {
+        oczekujacy = { obrys, dzialka: dzialka ?? null };
+        return;
       }
-      if (obrys) {
-        warstwaObrysu = L.geoJSON(obrys, { style: { color: kolorAkcentu(mapa.getContainer()), weight: 3, fillOpacity: 0.18, interactive: false } }).addTo(mapa);
-        mapa.fitBounds(warstwaObrysu.getBounds(), { padding: [40, 40], maxZoom: 20 });
-      } else if (warstwaDzialki) {
-        mapa.fitBounds(warstwaDzialki.getBounds(), { padding: [30, 30], maxZoom: 20 });
-      }
+      narysuj(obrys, dzialka ?? null);
     },
     rysuj(onGotowe) {
       if (!mapa) return;
@@ -88,6 +106,9 @@ export function utworzAdapterLeaflet(): AdapterMapy {
 function kafle(L: typeof Leaflet, zrodlo: ZrodloKafli): Leaflet.Layer {
   if (zrodlo.typ === 'xyz') {
     return L.tileLayer(zrodlo.url, { maxZoom: 21, maxNativeZoom: 19, attribution: zrodlo.atrybucja ?? '' });
+  }
+  if (zrodlo.typ === 'wmts') {
+    return L.tileLayer(WMTS_ORTO, { maxZoom: 21, maxNativeZoom: 19, attribution: 'Ortofotomapa: Geoportal.gov.pl' });
   }
   return L.tileLayer.wms(WMS_ORTO, {
     layers: 'Raster',

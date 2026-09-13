@@ -1,4 +1,4 @@
-import { useId, useState, type KeyboardEvent } from 'react';
+import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import type { Api, Bias } from './api';
 import { useSugestie } from './useSugestie';
 import type { Adres, Podpowiedz, Teksty } from './typy';
@@ -46,7 +46,17 @@ export function EkranAdresu({ api, bias, teksty, numerKroku, onWybrano, onPomin,
   const { lista, laduje } = useSugestie(api, q, bias);
   const idListy = useId();
 
+  const poleRef = useRef<HTMLInputElement>(null);
+
+  // Ulica bez numeru: wstawiamy ją do pola z miastem i spacją, klient dopisuje numer,
+  // podpowiedzi odpytują się ponownie już z pełną nazwą ulicy.
   function wybierz(p: Podpowiedz) {
+    if (p.rodzaj === 'ulica') {
+      setQ(`${p.ulica} `);
+      setAktywna(-1);
+      poleRef.current?.focus();
+      return;
+    }
     onWybrano(adresZPodpowiedzi(p, 'podpowiedz'));
   }
 
@@ -74,7 +84,7 @@ export function EkranAdresu({ api, bias, teksty, numerKroku, onWybrano, onPomin,
     setKomunikat(null);
     try {
       const wyniki = await api.podpowiedzi(pelny, bias);
-      const trafienie = wyniki.find((w) => w.numer) ?? wyniki[0];
+      const trafienie = wyniki.find((w) => w.rodzaj === 'adres');
       if (trafienie) {
         onWybrano({ ...adresZPodpowiedzi(trafienie, 'reczny'), kod: kod.trim() || trafienie.kod });
       } else {
@@ -96,6 +106,7 @@ export function EkranAdresu({ api, bias, teksty, numerKroku, onWybrano, onPomin,
       {!reczny && (
         <div className="ka-pole-adres">
           <input
+            ref={poleRef}
             className="ka-input"
             type="text"
             inputMode="text"
@@ -126,6 +137,7 @@ export function EkranAdresu({ api, bias, teksty, numerKroku, onWybrano, onPomin,
                   onClick={() => wybierz(p)}
                 >
                   {p.tekst}
+                  {p.rodzaj === 'ulica' && <small className="ka-pozycja-opis">{teksty.dopiszNumer}</small>}
                 </li>
               ))}
             </ul>
