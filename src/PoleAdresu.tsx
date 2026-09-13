@@ -99,9 +99,14 @@ export function PoleAdresu({ api, bias, teksty, naMapie, onWybrano, onPomin }: P
     <div className={naMapie ? 'ka-pole-adres ka-naklad' : 'ka-pole-adres'}>
       {!reczny && (
         <>
+          <div className="ka-input-lupka">
+            <svg className="ka-lupka" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+              <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" strokeWidth="2" />
+              <line x1="15.5" y1="15.5" x2="21" y2="21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
           <input
             ref={poleRef}
-            className="ka-input"
+            className="ka-input ka-input-z-lupka"
             type="text"
             inputMode="text"
             autoComplete="street-address"
@@ -118,6 +123,7 @@ export function PoleAdresu({ api, bias, teksty, naMapie, onWybrano, onPomin }: P
             }}
             onKeyDown={klawisz}
           />
+          </div>
           {laduje && <div className="ka-laduje" aria-live="polite">Szukam…</div>}
           {lista.length > 0 && (
             <ul className="ka-lista" role="listbox" id={idListy}>

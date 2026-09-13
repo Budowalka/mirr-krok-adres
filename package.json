@@ -1,6 +1,6 @@
 {
   "name": "mirr-krok-adres",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Krok adresu dla landingów kalkulatorowych MIRR: podpowiedzi adresu, dom na ortofotomapie z obrysem i kondygnacjami z ewidencji, komplet danych publicznych o nieruchomości",
   "license": "UNLICENSED",
   "private": false,

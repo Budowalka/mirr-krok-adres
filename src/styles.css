@@ -21,6 +21,9 @@
 .ka-pole-adres { position: relative; }
 .ka-input { width: 100%; box-sizing: border-box; border: 1px solid var(--ka-linia); border-radius: var(--ka-promien); padding: 14px 16px; font-size: 17px; font-family: inherit; background: #fff; color: var(--ka-tekst); }
 .ka-input:focus { outline: 2px solid var(--ka-akcent); outline-offset: -1px; border-color: var(--ka-akcent); }
+.ka-input-lupka { position: relative; }
+.ka-lupka { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ka-tekst-slaby); pointer-events: none; }
+.ka-input-z-lupka { padding-left: 42px; }
 .ka-lista { list-style: none; margin: 6px 0 0; padding: 0; border: 1px solid var(--ka-linia); border-radius: var(--ka-promien); background: #fff; overflow: hidden; }
 .ka-pozycja { padding: 13px 16px; cursor: pointer; border-top: 1px solid var(--ka-linia); font-size: 16px; }
 .ka-pozycja:first-child { border-top: 0; }
