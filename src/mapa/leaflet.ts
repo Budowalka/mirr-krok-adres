@@ -20,8 +20,13 @@ export function utworzAdapterLeaflet(): AdapterMapy {
 
   return {
     async zamontuj(el, { centrum, zrodloKafli }) {
-      const [leaflet] = await Promise.all([import('leaflet'), import('@geoman-io/leaflet-geoman-free')]);
+      // Geoman przy imporcie szuka globalnego `L` (window.L), więc Leaflet musi być
+      // załadowany i wystawiony PRZED importem Geomana — równoległy import kończył się
+      // „ReferenceError: L is not defined" (demo, 13.09).
+      const leaflet = await import('leaflet');
       L = (leaflet.default ?? leaflet) as typeof Leaflet;
+      (window as unknown as { L: typeof Leaflet }).L = L;
+      await import('@geoman-io/leaflet-geoman-free');
       mapa = L.map(el, { zoomControl: true, attributionControl: true, tap: true } as Leaflet.MapOptions).setView([centrum.lat, centrum.lon], 19);
       kafle(L, zrodloKafli).addTo(mapa);
       const pm = (mapa as unknown as { pm?: { setLang?: (kod: string) => void; addControls?: (o: unknown) => void } }).pm;
