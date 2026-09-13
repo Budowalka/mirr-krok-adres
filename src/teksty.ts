@@ -38,11 +38,14 @@ export const DOMYSLNE_TEKSTY: Teksty = {
   nieZnaleziono: 'Nie udało się znaleźć tego adresu na mapie. Podasz powierzchnię ręcznie.',
 };
 
+/** Opis słowny, bez powtarzania liczby (panel pokazuje „{n}, {opis}”). */
 export function opisKondygnacji(n: number | null): string {
   if (n === null) return 'nie wiemy';
   if (n === 1) return 'dom parterowy';
   if (n === 2) return 'parter i piętro';
-  return `${n} kondygnacje`;
+  if (n === 3) return 'parter i dwa piętra';
+  if (n === 4) return 'parter i trzy piętra';
+  return `parter i ${n - 1} pięter`;
 }
 
 export function wstaw(szablon: string, wartosci: Record<string, string | number>): string {
