@@ -47,8 +47,10 @@ export function utworzAdapterLeaflet(): AdapterMapy {
     const pm = (warstwa as unknown as { pm?: { enable(o: unknown): void } }).pm;
     if (!pm) return;
     pm.enable({ allowSelfIntersection: false, snappable: false, draggable: false });
-    warstwa.off('pm:edit');
-    warstwa.on('pm:edit', () => {
+    // pm:change leci przy każdym ruchu rogu (obwód i rzut liczą się na bieżąco),
+    // pm:edit / pm:markerdragend po puszczeniu — jedno z nich zawsze dojdzie.
+    warstwa.off('pm:change pm:edit pm:markerdragend');
+    warstwa.on('pm:change pm:edit pm:markerdragend', () => {
       const geom = warstwa.toGeoJSON().geometry;
       if (geom.type === 'Polygon') onZmieniono?.(geom);
     });
