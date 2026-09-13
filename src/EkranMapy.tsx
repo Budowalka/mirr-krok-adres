@@ -141,15 +141,6 @@ export function EkranMapy({ api, adres, teksty, numerKroku, wysokoscKondygnacji,
     );
   }
 
-  // Obrys z ewidencji, ale rogi do poprawki: przesunięcie oznacza obrys jako ręczny.
-  function poprawRogi() {
-    setPoprawiam(false);
-    setStan('narysowane');
-    adapterRef.current?.edytujObrys((zmieniony) => {
-      setObrys(zmieniony);
-      setZrodloObrysu('reczne');
-    });
-  }
 
   function cofnijRysowanie() {
     adapterRef.current?.przerwijRysowanie();
@@ -257,8 +248,7 @@ export function EkranMapy({ api, adres, teksty, numerKroku, wysokoscKondygnacji,
         {stan === 'ewidencja' && (
           <>
             <button type="button" className="ka-btn ka-btn-glowny" disabled={kondygnacje === null} onClick={gotowe}>{teksty.zgadzaSie}</button>
-            <button type="button" className="ka-btn ka-btn-drugi" onClick={poprawRogi}>{teksty.poprawRogi}</button>
-            <button type="button" className="ka-link ka-pomin" onClick={zacznijRysowac}>{teksty.zaznaczeSam}</button>
+            <button type="button" className="ka-btn ka-btn-drugi" onClick={zacznijRysowac}>{teksty.zaznaczeSam}</button>
           </>
         )}
         {stan === 'brak' && (

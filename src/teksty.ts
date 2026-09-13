@@ -24,11 +24,10 @@ export const DOMYSLNE_TEKSTY: Teksty = {
   kondygnacje: 'Kondygnacje',
   popraw: 'Popraw',
   zgadzaSie: 'Zgadza się, dalej',
-  zaznaczeSam: 'Zaznaczę dom sam',
-  poprawRogi: 'Popraw rogi',
+  zaznaczeSam: 'Zaznaczę samodzielnie',
   przeciagnijRogi: 'Przeciągnij rogi, żeby poprawić obrys. Obwód i powierzchnia liczą się na bieżąco.',
   notaMapa:
-    'Obrys i liczba kondygnacji pochodzą z ewidencji budynków. Jeśli dom jest nowszy niż zdjęcie albo coś się nie zgadza, dotknij „Zaznaczę dom sam” i obrysuj go palcem po rogach albo „Popraw” przy kondygnacjach.',
+    'Obrys i liczba kondygnacji pochodzą z ewidencji budynków. Jeśli dom jest nowszy niż zdjęcie albo coś się nie zgadza, dotknij „Zaznaczę samodzielnie” i obrysuj go palcem po rogach albo „Popraw” przy kondygnacjach.',
   brakObrysu: 'Nie znaleźliśmy tego domu w ewidencji. Zaznacz go sam: dotknij kolejno rogi domu na zdjęciu.',
   zaznaczNaMapie: 'Zaznacz dom na mapie',
   rysowanie: 'Dotykaj kolejno rogi domu. Ostatni róg dotknij dwa razy, żeby zamknąć obrys.',

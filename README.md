@@ -30,7 +30,7 @@ Spec: `smova-3/docs/superpowers/specs/2026-09-13-komponent-krok-adres-design.md`
 ## Instalacja w landingu (Next 15, React 19)
 
 ```bash
-npm i github:Budowalka/mirr-krok-adres#v0.1.5 leaflet @geoman-io/leaflet-geoman-free
+npm i github:Budowalka/mirr-krok-adres#v0.1.6 leaflet @geoman-io/leaflet-geoman-free
 ```
 
 `next.config.ts`:

@@ -130,23 +130,10 @@ describe('EkranMapy', () => {
     expect(w.zrodlo_obrysu).toBe('reczne');
   });
 
-  it('„Popraw rogi” przy obrysie z ewidencji włącza edycję; przesunięcie rogu oznacza obrys jako ręczny', async () => {
-    const { adapter, onGotowe } = renderuj(EWIDENCJA);
-    await screen.findByText('Popraw rogi');
-    fireEvent.click(screen.getByText('Popraw rogi'));
-    expect(adapter.edycjaWlaczona).toBe(true);
-    act(() => adapter.przesunRog(PROSTOKAT));
-    fireEvent.click(screen.getByText('Dalej'));
-    const w = onGotowe.mock.calls[0][0];
-    expect(w.zrodlo_obrysu).toBe('reczne');
-    expect(w.obrys).toEqual(PROSTOKAT);
-    expect(w.identyfikator_egib).toBeNull();
-  });
-
-  it('„Zaznaczę dom sam” z obrysem z ewidencji przechodzi do rysowania, „Cofnij” wraca do obrysu z ewidencji', async () => {
+  it('„Zaznaczę samodzielnie” z obrysem z ewidencji przechodzi do rysowania, „Cofnij” wraca do obrysu z ewidencji', async () => {
     const { adapter } = renderuj(EWIDENCJA);
-    await screen.findByText('Zaznaczę dom sam');
-    fireEvent.click(screen.getByText('Zaznaczę dom sam'));
+    await screen.findByText('Zaznaczę samodzielnie');
+    fireEvent.click(screen.getByText('Zaznaczę samodzielnie'));
     expect(adapter.obrys).toBeNull();
     expect(screen.getByText(DOMYSLNE_TEKSTY.rysowanie)).toBeTruthy();
     fireEvent.click(screen.getByText('Cofnij'));
