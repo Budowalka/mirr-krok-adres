@@ -20,6 +20,7 @@ export function utworzAdapterLeaflet(): AdapterMapy {
   let warstwaObrysu: Leaflet.GeoJSON | null = null;
   let warstwaDzialki: Leaflet.GeoJSON | null = null;
   let onNarysowano: ((obrys: Polygon) => void) | null = null;
+  let onZmieniono: ((obrys: Polygon) => void) | null = null;
   // Odpowiedź z MIRR bywa szybsza niż dynamiczny import Leafleta: obrys czeka tu na mapę
   // (bez tego rysowanie i przybliżenie ginęły — zrzut Piotra 13.09: zdjęcie „daleko”, bez obrysu).
   let oczekujacy: { obrys: Polygon | null; dzialka: Polygon | null } | null = null;
@@ -41,6 +42,18 @@ export function utworzAdapterLeaflet(): AdapterMapy {
     }
   }
 
+  // Geoman: przeciąganie rogów (i dodawanie nowych na środku krawędzi); każda zmiana → onZmieniono.
+  function wlaczEdycje(warstwa: Leaflet.Polygon) {
+    const pm = (warstwa as unknown as { pm?: { enable(o: unknown): void } }).pm;
+    if (!pm) return;
+    pm.enable({ allowSelfIntersection: false, snappable: false, draggable: false });
+    warstwa.off('pm:edit');
+    warstwa.on('pm:edit', () => {
+      const geom = warstwa.toGeoJSON().geometry;
+      if (geom.type === 'Polygon') onZmieniono?.(geom);
+    });
+  }
+
   return {
     async zamontuj(el, { centrum, zrodloKafli }) {
       // Geoman przy imporcie szuka globalnego `L` (window.L), więc Leaflet musi być
@@ -57,8 +70,14 @@ export function utworzAdapterLeaflet(): AdapterMapy {
       mapa.on('pm:create', (e: unknown) => {
         const ev = e as { layer: Leaflet.Polygon };
         const geom = ev.layer.toGeoJSON().geometry;
-        mapa?.removeLayer(ev.layer);
-        if (geom.type !== 'Polygon') return;
+        if (geom.type !== 'Polygon') {
+          mapa?.removeLayer(ev.layer);
+          return;
+        }
+        // Narysowany wielokąt zostaje warstwą obrysu z włączonym przeciąganiem rogów.
+        warstwaObrysu?.remove();
+        warstwaObrysu = ev.layer as unknown as Leaflet.GeoJSON;
+        wlaczEdycje(ev.layer);
         const cb = onNarysowano;
         onNarysowano = null;
         (mapa as unknown as { pm: { disableDraw(): void } }).pm.disableDraw();
@@ -76,9 +95,15 @@ export function utworzAdapterLeaflet(): AdapterMapy {
       }
       narysuj(obrys, dzialka ?? null);
     },
-    rysuj(onGotowe) {
+    edytujObrys(onZmiana) {
+      if (!mapa || !warstwaObrysu) return;
+      onZmieniono = onZmiana;
+      warstwaObrysu.eachLayer((w) => wlaczEdycje(w as Leaflet.Polygon));
+    },
+    rysuj(onGotowe, onZmiana) {
       if (!mapa) return;
       onNarysowano = onGotowe;
+      onZmieniono = onZmiana;
       (mapa as unknown as { pm: { enableDraw(kind: string, o: unknown): void } }).pm.enableDraw('Polygon', {
         snappable: false,
         allowSelfIntersection: false,
@@ -92,7 +117,9 @@ export function utworzAdapterLeaflet(): AdapterMapy {
     },
     przerwijRysowanie() {
       onNarysowano = null;
+      onZmieniono = null;
       (mapa as unknown as { pm?: { disableDraw(): void } } | null)?.pm?.disableDraw();
+      warstwaObrysu?.eachLayer((w) => (w as unknown as { pm?: { disable(): void } }).pm?.disable());
     },
     zniszcz() {
       mapa?.remove();

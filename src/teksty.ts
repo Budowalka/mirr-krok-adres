@@ -25,6 +25,8 @@ export const DOMYSLNE_TEKSTY: Teksty = {
   popraw: 'Popraw',
   zgadzaSie: 'Zgadza się, dalej',
   zaznaczeSam: 'Zaznaczę dom sam',
+  poprawRogi: 'Popraw rogi',
+  przeciagnijRogi: 'Przeciągnij rogi, żeby poprawić obrys. Obwód i powierzchnia liczą się na bieżąco.',
   notaMapa:
     'Obrys i liczba kondygnacji pochodzą z ewidencji budynków. Jeśli dom jest nowszy niż zdjęcie albo coś się nie zgadza, dotknij „Zaznaczę dom sam” i obrysuj go palcem po rogach albo „Popraw” przy kondygnacjach.',
   brakObrysu: 'Nie znaleźliśmy tego domu w ewidencji. Zaznacz go sam: dotknij kolejno rogi domu na zdjęciu.',

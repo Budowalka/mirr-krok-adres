@@ -110,6 +110,8 @@ export type Teksty = {
   popraw: string;
   zgadzaSie: string;
   zaznaczeSam: string;
+  poprawRogi: string;
+  przeciagnijRogi: string;
   notaMapa: string;
   brakObrysu: string;
   zaznaczNaMapie: string;

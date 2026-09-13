@@ -7,6 +7,8 @@ export class FalszywyAdapterMapy implements AdapterMapy {
   obrys: Polygon | null = null;
   dzialka: Polygon | null = null;
   rysowanie: ((obrys: Polygon) => void) | null = null;
+  zmiana: ((obrys: Polygon) => void) | null = null;
+  edycjaWlaczona = false;
   zniszczony = false;
 
   async zamontuj(el: HTMLElement) {
@@ -17,11 +19,18 @@ export class FalszywyAdapterMapy implements AdapterMapy {
     this.obrys = obrys;
     this.dzialka = dzialka ?? null;
   }
-  rysuj(onGotowe: (obrys: Polygon) => void) {
+  rysuj(onGotowe: (obrys: Polygon) => void, onZmiana: (obrys: Polygon) => void) {
     this.rysowanie = onGotowe;
+    this.zmiana = onZmiana;
+  }
+  edytujObrys(onZmiana: (obrys: Polygon) => void) {
+    this.edycjaWlaczona = true;
+    this.zmiana = onZmiana;
   }
   przerwijRysowanie() {
     this.rysowanie = null;
+    this.zmiana = null;
+    this.edycjaWlaczona = false;
   }
   zniszcz() {
     this.zniszczony = true;
@@ -30,6 +39,13 @@ export class FalszywyAdapterMapy implements AdapterMapy {
   zakonczRysowanie(obrys: Polygon) {
     const cb = this.rysowanie;
     this.rysowanie = null;
+    this.obrys = obrys;
+    this.edycjaWlaczona = true;
     cb?.(obrys);
+  }
+  /** Pomocnik testowy: „użytkownik przeciągnął róg”. */
+  przesunRog(obrys: Polygon) {
+    this.obrys = obrys;
+    this.zmiana?.(obrys);
   }
 }

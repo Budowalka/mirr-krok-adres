@@ -113,6 +113,36 @@ describe('EkranMapy', () => {
     expect(wynik.dzialka.numer).toBe('198/2');
   });
 
+  it('po narysowaniu rogi da się przesuwać: zmiana z adaptera przelicza obwód i rzut, a wynik ma nowy obrys', async () => {
+    const { adapter, onGotowe } = renderuj(BRAK);
+    await screen.findByText('Zaznacz dom na mapie');
+    fireEvent.click(screen.getByText('Zaznacz dom na mapie'));
+    act(() => adapter.zakonczRysowanie(PROSTOKAT));
+    expect(adapter.edycjaWlaczona).toBe(true);
+    expect(screen.getByText(DOMYSLNE_TEKSTY.przeciagnijRogi)).toBeTruthy();
+    const wiekszy = { ...PROSTOKAT, coordinates: [PROSTOKAT.coordinates[0].map(([lon, lat], i) => (i === 1 || i === 2 ? [lon + 0.0001466, lat] : [lon, lat]))] };
+    act(() => adapter.przesunRog(wiekszy));
+    fireEvent.click(screen.getByText('Parter'));
+    fireEvent.click(screen.getByText('Dalej'));
+    const w = onGotowe.mock.calls[0][0];
+    expect(w.rzut_m2).toBeGreaterThan(190);
+    expect(w.obrys).toEqual(wiekszy);
+    expect(w.zrodlo_obrysu).toBe('reczne');
+  });
+
+  it('„Popraw rogi” przy obrysie z ewidencji włącza edycję; przesunięcie rogu oznacza obrys jako ręczny', async () => {
+    const { adapter, onGotowe } = renderuj(EWIDENCJA);
+    await screen.findByText('Popraw rogi');
+    fireEvent.click(screen.getByText('Popraw rogi'));
+    expect(adapter.edycjaWlaczona).toBe(true);
+    act(() => adapter.przesunRog(PROSTOKAT));
+    fireEvent.click(screen.getByText('Dalej'));
+    const w = onGotowe.mock.calls[0][0];
+    expect(w.zrodlo_obrysu).toBe('reczne');
+    expect(w.obrys).toEqual(PROSTOKAT);
+    expect(w.identyfikator_egib).toBeNull();
+  });
+
   it('„Zaznaczę dom sam” z obrysem z ewidencji przechodzi do rysowania, „Cofnij” wraca do obrysu z ewidencji', async () => {
     const { adapter } = renderuj(EWIDENCJA);
     await screen.findByText('Zaznaczę dom sam');

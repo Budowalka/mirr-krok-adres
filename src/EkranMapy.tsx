@@ -130,11 +130,24 @@ export function EkranMapy({ api, adres, teksty, numerKroku, wysokoscKondygnacji,
     setObrys(null);
     setStan('rysowanie');
     adapterRef.current?.pokazObrys(null, dane.dzialka?.obrys ?? null);
-    adapterRef.current?.rysuj((narysowany) => {
-      setObrys(narysowany);
+    adapterRef.current?.rysuj(
+      (narysowany) => {
+        // Warstwę trzyma adapter (rogi zostają do przeciągania) — bez pokazObrys, które by ją podmieniło.
+        setObrys(narysowany);
+        setZrodloObrysu('reczne');
+        setStan('narysowane');
+      },
+      (zmieniony) => setObrys(zmieniony)
+    );
+  }
+
+  // Obrys z ewidencji, ale rogi do poprawki: przesunięcie oznacza obrys jako ręczny.
+  function poprawRogi() {
+    setPoprawiam(false);
+    setStan('narysowane');
+    adapterRef.current?.edytujObrys((zmieniony) => {
+      setObrys(zmieniony);
       setZrodloObrysu('reczne');
-      adapterRef.current?.pokazObrys(narysowany, dane.dzialka?.obrys ?? null);
-      setStan('narysowane');
     });
   }
 
@@ -207,6 +220,7 @@ export function EkranMapy({ api, adres, teksty, numerKroku, wysokoscKondygnacji,
       {stan === 'laduje' && <p className="ka-podpowiedz" aria-live="polite">{teksty.szukamy}</p>}
       {stan === 'brak' && <p className="ka-podpowiedz">{teksty.brakObrysu}</p>}
       {stan === 'rysowanie' && <p className="ka-podpowiedz">{teksty.rysowanie}</p>}
+      {stan === 'narysowane' && <p className="ka-podpowiedz">{teksty.przeciagnijRogi}</p>}
 
       <div className="ka-mapa" ref={mapaRef} role="application" aria-label="Mapa z domem" />
 
@@ -243,7 +257,8 @@ export function EkranMapy({ api, adres, teksty, numerKroku, wysokoscKondygnacji,
         {stan === 'ewidencja' && (
           <>
             <button type="button" className="ka-btn ka-btn-glowny" disabled={kondygnacje === null} onClick={gotowe}>{teksty.zgadzaSie}</button>
-            <button type="button" className="ka-btn ka-btn-drugi" onClick={zacznijRysowac}>{teksty.zaznaczeSam}</button>
+            <button type="button" className="ka-btn ka-btn-drugi" onClick={poprawRogi}>{teksty.poprawRogi}</button>
+            <button type="button" className="ka-link ka-pomin" onClick={zacznijRysowac}>{teksty.zaznaczeSam}</button>
           </>
         )}
         {stan === 'brak' && (

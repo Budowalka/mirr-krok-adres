@@ -10,8 +10,13 @@ export interface AdapterMapy {
   zamontuj(el: HTMLElement, opcje: { centrum: { lat: number; lon: number }; zrodloKafli: ZrodloKafli }): Promise<void>;
   /** Rysuje obrys domu (akcent) i opcjonalnie działkę (cienka linia); null czyści. */
   pokazObrys(obrys: Polygon | null, dzialka?: Polygon | null): void;
-  /** Tryb rysowania wielokąta po rogach (dotyk i mysz); po zamknięciu woła onGotowe. */
-  rysuj(onGotowe: (obrys: Polygon) => void): void;
+  /**
+   * Tryb rysowania wielokąta po rogach (dotyk i mysz); po zamknięciu woła onGotowe,
+   * a rogi zostają do przeciągania — każda zmiana woła onZmiana z nowym obrysem.
+   */
+  rysuj(onGotowe: (obrys: Polygon) => void, onZmiana: (obrys: Polygon) => void): void;
+  /** Włącza przeciąganie rogów pokazanego obrysu (np. z ewidencji); zmiany idą do onZmiana. */
+  edytujObrys(onZmiana: (obrys: Polygon) => void): void;
   przerwijRysowanie(): void;
   zniszcz(): void;
 }
