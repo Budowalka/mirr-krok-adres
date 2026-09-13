@@ -66,7 +66,7 @@ describe('KrokAdresu', () => {
     vi.useRealTimers();
     await screen.findByText('Zgadza się, dalej');
     fireEvent.click(screen.getByText('Zmień'));
-    expect(screen.getByText('Gdzie stoi Twój dom?')).toBeTruthy();
+    expect(screen.getByText('Podaj adres')).toBeTruthy();
     expect(adapter.obrys).toBeNull();
     expect(adapter.zoom).toBe(6);
     expect(adapter.zniszczony).toBe(false);

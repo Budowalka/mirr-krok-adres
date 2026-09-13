@@ -3,7 +3,7 @@ import type { Teksty } from './typy';
 /** Teksty domyślne (forma Ty, po polsku, bez żargonu). Landing nadpisuje wybrane przez props.teksty. */
 export const DOMYSLNE_TEKSTY: Teksty = {
   krok: 'Krok {x} z {y}',
-  naglowekAdres: 'Gdzie stoi Twój dom?',
+  naglowekAdres: 'Podaj adres',
   podpowiedzAdres: 'Wpisz ulicę i numer, a mapa przybliży się do Twojego domu.',
   poleAdres: 'Ulica i numer, np. Klonowa 7',
   przyciskPokaz: 'Pokaż mój dom na mapie',
