@@ -15,6 +15,12 @@ export class FalszywyAdapterMapy implements AdapterMapy {
     this.zamontowany = true;
     el.setAttribute('data-mapa', 'falszywa');
   }
+  centrum: { lat: number; lon: number } | null = null;
+  zoom = 0;
+  przelec(centrum: { lat: number; lon: number }, zoom: number) {
+    this.centrum = centrum;
+    this.zoom = zoom;
+  }
   pokazObrys(obrys: Polygon | null, dzialka?: Polygon | null) {
     this.obrys = obrys;
     this.dzialka = dzialka ?? null;

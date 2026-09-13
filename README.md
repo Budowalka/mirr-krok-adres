@@ -1,11 +1,13 @@
 # mirr-krok-adres
 
-Krok adresu wielokrotnego użytku dla landingów kalkulatorowych MIRR (Budowalka). Dwa ekrany:
+Krok adresu wielokrotnego użytku dla landingów kalkulatorowych MIRR (Budowalka). Jeden ekran, wzór Roofr:
 
-1. **Adres** — pole z podpowiedziami po fragmencie („Klonowa 7 Sosn…”), ręczny wpis jako zapas.
-2. **Mapa** — dom na ortofotomapie Geoportalu z obrysem z ewidencji, pytanie „To ten dom?”
-   („Zgadza się, dalej” / „Zaznaczę dom sam” — rysowanie palcem po rogach), obwód i rzut liczone
-   w przeglądarce, kondygnacje z ewidencji z linkiem „Popraw” (pytanie tylko, gdy ewidencja nie zna domu).
+1. Mapa satelitarna (ortofotomapa Geoportalu) od pierwszej sekundy, widok na obszar działania firmy;
+   pole adresu z podpowiedziami pływa nad mapą („Klonowa 7 Sosn…”), ręczny wpis jako zapas.
+2. Po wyborze adresu przelot do domu, obrys z ewidencji i działka, pytanie „To ten dom?”
+   („Zgadza się, dalej” / „Zaznaczę samodzielnie” — rysowanie palcem po rogach, rogi do przeciągania),
+   obwód i rzut liczone w przeglądarce, kondygnacje z ewidencji z linkiem „Popraw”
+   (pytanie tylko, gdy ewidencja nie zna domu).
 
 Wynik to komplet danych publicznych o nieruchomości: adres z TERYT/SIMC/ULIC, obrys (GeoJSON), obwód,
 rzut, kondygnacje i ich źródło, identyfikator EGiB, funkcja budynku, kod KST, kategoria istnienia,
@@ -30,7 +32,7 @@ Spec: `smova-3/docs/superpowers/specs/2026-09-13-komponent-krok-adres-design.md`
 ## Instalacja w landingu (Next 15, React 19)
 
 ```bash
-npm i github:Budowalka/mirr-krok-adres#v0.1.6 leaflet @geoman-io/leaflet-geoman-free
+npm i github:Budowalka/mirr-krok-adres#v0.2.0 leaflet @geoman-io/leaflet-geoman-free
 ```
 
 `next.config.ts`:

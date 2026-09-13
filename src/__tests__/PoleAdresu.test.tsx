@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Api } from '../api';
-import { EkranAdresu } from '../EkranAdresu';
+import { PoleAdresu } from '../PoleAdresu';
 import { DOMYSLNE_TEKSTY } from '../teksty';
 import type { Podpowiedz } from '../typy';
 
@@ -17,13 +17,13 @@ function api(podpowiedzi: (q: string) => Promise<Podpowiedz[]> = async () => KLO
   return { podpowiedzi: vi.fn(podpowiedzi), budynek: vi.fn() } as unknown as ApiTestowe;
 }
 
-describe('EkranAdresu', () => {
+describe('PoleAdresu', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
   it('nie pyta przy 2 znakach, pyta po 250 ms od 3 znaków z biasem i anuluje poprzednie zapytanie', async () => {
     const a = api();
-    render(<EkranAdresu api={a} bias={{ lat: 50.28, lon: 19.13 }} teksty={DOMYSLNE_TEKSTY} onWybrano={vi.fn()} onPomin={vi.fn()} />);
+    render(<PoleAdresu naMapie api={a} bias={{ lat: 50.28, lon: 19.13 }} teksty={DOMYSLNE_TEKSTY} onWybrano={vi.fn()} onPomin={vi.fn()} />);
     const pole = screen.getByPlaceholderText('Ulica i numer, np. Klonowa 7');
     fireEvent.change(pole, { target: { value: 'Kl' } });
     await act(async () => { vi.advanceTimersByTime(400); });
@@ -40,7 +40,7 @@ describe('EkranAdresu', () => {
 
   it('pokazuje listę i po kliknięciu zwraca adres z kontraktem', async () => {
     const onWybrano = vi.fn();
-    render(<EkranAdresu api={api()} bias={undefined} teksty={DOMYSLNE_TEKSTY} onWybrano={onWybrano} onPomin={vi.fn()} />);
+    render(<PoleAdresu naMapie api={api()} bias={undefined} teksty={DOMYSLNE_TEKSTY} onWybrano={onWybrano} onPomin={vi.fn()} />);
     fireEvent.change(screen.getByPlaceholderText('Ulica i numer, np. Klonowa 7'), { target: { value: 'Klonowa 7' } });
     await act(async () => { vi.advanceTimersByTime(300); await Promise.resolve(); });
     const pozycje = screen.getAllByRole('option');
@@ -53,7 +53,7 @@ describe('EkranAdresu', () => {
 
   it('strzałki i Enter wybierają pozycję z klawiatury', async () => {
     const onWybrano = vi.fn();
-    render(<EkranAdresu api={api()} bias={undefined} teksty={DOMYSLNE_TEKSTY} onWybrano={onWybrano} onPomin={vi.fn()} />);
+    render(<PoleAdresu naMapie api={api()} bias={undefined} teksty={DOMYSLNE_TEKSTY} onWybrano={onWybrano} onPomin={vi.fn()} />);
     const pole = screen.getByPlaceholderText('Ulica i numer, np. Klonowa 7');
     fireEvent.change(pole, { target: { value: 'Klonowa 7' } });
     await act(async () => { vi.advanceTimersByTime(300); await Promise.resolve(); });
@@ -69,7 +69,7 @@ describe('EkranAdresu', () => {
     const onWybrano = vi.fn();
     const onPomin = vi.fn();
     const a = api(async (q: string) => (q.includes('Zwierzyniecka') ? [{ ...KLONOWA[0], ulica: 'Zwierzyniecka', numer: '5', miasto: 'Sochaczew', kod: '96-500' }] : []));
-    render(<EkranAdresu api={a} bias={undefined} teksty={DOMYSLNE_TEKSTY} onWybrano={onWybrano} onPomin={onPomin} />);
+    render(<PoleAdresu naMapie api={a} bias={undefined} teksty={DOMYSLNE_TEKSTY} onWybrano={onWybrano} onPomin={onPomin} />);
     fireEvent.click(screen.getByText('Nie ma mojego adresu na liście'));
     fireEvent.change(screen.getByPlaceholderText('np. Klonowa 7'), { target: { value: 'Zwierzyniecka 5' } });
     fireEvent.change(screen.getByPlaceholderText('np. Sosnowiec'), { target: { value: 'Sochaczew' } });
@@ -88,7 +88,7 @@ describe('EkranAdresu', () => {
         ? [{ rodzaj: 'adres', tekst: 'Franciszka Brzezińskiego 26A, Pruszków 05-800', ulica: 'Franciszka Brzezińskiego', numer: '26A', kod: '05-800', miasto: 'Pruszków', lat: 52.17, lon: 20.8 }]
         : [{ rodzaj: 'ulica', tekst: 'Franciszka Brzezińskiego, Pruszków 05-800', ulica: 'Franciszka Brzezińskiego', numer: null, kod: '05-800', miasto: 'Pruszków', lat: 52.17, lon: 20.8 }]
     );
-    render(<EkranAdresu api={a} bias={undefined} teksty={DOMYSLNE_TEKSTY} onWybrano={onWybrano} onPomin={vi.fn()} />);
+    render(<PoleAdresu naMapie api={a} bias={undefined} teksty={DOMYSLNE_TEKSTY} onWybrano={onWybrano} onPomin={vi.fn()} />);
     const pole = screen.getByPlaceholderText('Ulica i numer, np. Klonowa 7') as HTMLInputElement;
     fireEvent.change(pole, { target: { value: 'franciszka brze' } });
     await act(async () => { vi.advanceTimersByTime(300); await Promise.resolve(); });
@@ -102,10 +102,4 @@ describe('EkranAdresu', () => {
     expect(onWybrano).toHaveBeenCalledWith(expect.objectContaining({ numer: '26A', miasto: 'Pruszków' }));
   });
 
-  it('„Wolę podać powierzchnię ręcznie” woła onPomin', () => {
-    const onPomin = vi.fn();
-    render(<EkranAdresu api={api()} bias={undefined} teksty={DOMYSLNE_TEKSTY} onWybrano={vi.fn()} onPomin={onPomin} />);
-    fireEvent.click(screen.getByText('Wolę podać powierzchnię ręcznie'));
-    expect(onPomin).toHaveBeenCalled();
-  });
 });

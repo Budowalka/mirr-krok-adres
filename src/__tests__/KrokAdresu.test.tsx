@@ -30,12 +30,17 @@ describe('KrokAdresu', () => {
     render(<KrokAdresu api="/api/geo" bias={{ lat: 50.28, lon: 19.13 }} numerKroku={{ adres: 1, mapa: 2, z: 5 }} onGotowe={onGotowe} onPomin={vi.fn()} adapterMapy={() => adapter} teksty={{ naglowekAdres: 'Gdzie stoi budynek?' }} />);
     expect(screen.getByText('Krok 1 z 5')).toBeTruthy();
     expect(screen.getByText('Gdzie stoi budynek?')).toBeTruthy();
+    // mapa od razu, widok na obszar firmy
+    expect(adapter.zamontowany).toBe(true);
     fireEvent.change(screen.getByPlaceholderText('Ulica i numer, np. Klonowa 7'), { target: { value: 'Klonowa 7' } });
     await act(async () => { vi.advanceTimersByTime(300); await Promise.resolve(); });
     fireEvent.click(screen.getByRole('option'));
     vi.useRealTimers();
     await screen.findByText('Zgadza się, dalej');
     expect(screen.getByText('Krok 2 z 5')).toBeTruthy();
+    expect(adapter.centrum).toEqual({ lat: 50.27, lon: 19.16 });
+    expect(adapter.zoom).toBe(18);
+    expect(screen.getByText('Klonowa 7, Sosnowiec')).toBeTruthy();
     expect(adapter.obrys).toEqual(OBRYS);
     fireEvent.click(screen.getByText('Zgadza się, dalej'));
     const w = onGotowe.mock.calls[0][0];
@@ -45,7 +50,14 @@ describe('KrokAdresu', () => {
     expect(w.rzut_m2).toBeGreaterThan(90);
   });
 
-  it('„Wstecz” na mapie wraca do ekranu adresu', async () => {
+  it('„Wolę podać powierzchnię ręcznie” woła onPomin', () => {
+    const onPomin = vi.fn();
+    render(<KrokAdresu api="/api/geo" onGotowe={vi.fn()} onPomin={onPomin} adapterMapy={() => new FalszywyAdapterMapy()} />);
+    fireEvent.click(screen.getByText('Wolę podać powierzchnię ręcznie'));
+    expect(onPomin).toHaveBeenCalled();
+  });
+
+  it('„Zmień” w pigułce wraca do pola adresu, czyści obrys i odlatuje na obszar firmy', async () => {
     const adapter = new FalszywyAdapterMapy();
     render(<KrokAdresu api="/api/geo" onGotowe={vi.fn()} onPomin={vi.fn()} adapterMapy={() => adapter} />);
     fireEvent.change(screen.getByPlaceholderText('Ulica i numer, np. Klonowa 7'), { target: { value: 'Klonowa 7' } });
@@ -53,8 +65,10 @@ describe('KrokAdresu', () => {
     fireEvent.click(screen.getByRole('option'));
     vi.useRealTimers();
     await screen.findByText('Zgadza się, dalej');
-    fireEvent.click(screen.getByText('← Wstecz'));
+    fireEvent.click(screen.getByText('Zmień'));
     expect(screen.getByText('Gdzie stoi Twój dom?')).toBeTruthy();
-    expect(adapter.zniszczony).toBe(true);
+    expect(adapter.obrys).toBeNull();
+    expect(adapter.zoom).toBe(6);
+    expect(adapter.zniszczony).toBe(false);
   });
 });

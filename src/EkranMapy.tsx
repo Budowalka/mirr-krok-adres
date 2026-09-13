@@ -1,20 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import type { Polygon } from 'geojson';
 import type { Api } from './api';
 import { obwodM, rzutM2, zGeoJson } from './geometria';
 import type { AdapterMapy } from './mapa/adapter';
 import { opisKondygnacji, wstaw } from './teksty';
-import type { Adres, LiniaPanelu, OdpowiedzBudynek, Teksty, WynikKrokuAdresu, ZrodloKafli } from './typy';
+import type { Adres, LiniaPanelu, OdpowiedzBudynek, Teksty, WynikKrokuAdresu } from './typy';
 
 type Props = {
   api: Api;
   adres: Adres;
   teksty: Teksty;
-  numerKroku?: { x: number; y: number };
   wysokoscKondygnacji: number;
   linia?: (czesciowy: Pick<WynikKrokuAdresu, 'obwod_m' | 'rzut_m2' | 'kondygnacje'>) => LiniaPanelu | null;
-  adapter: () => AdapterMapy;
-  zrodloKafli: ZrodloKafli;
+  /** Mapa zamontowana przez rodzica (KrokAdresu); null w trybie bez mapy. */
+  adapterRef: RefObject<AdapterMapy | null>;
   /** false = bez mapy: dane zbieramy, ale nie prosimy o potwierdzenie obrysu (Grey House). */
   pokazMape: boolean;
   onGotowe: (wynik: WynikKrokuAdresu) => void;
@@ -37,11 +36,10 @@ export function zlozWynik(
 ): WynikKrokuAdresu {
   const reczne = wybor.zrodlo_obrysu === 'reczne';
   const ring = wybor.obrys ? zGeoJson(wybor.obrys) : [];
-  const gmina = dane.dzialka?.gmina ?? null;
   return {
     adres: {
       ...adres,
-      gmina,
+      gmina: dane.dzialka?.gmina ?? null,
       powiat: dane.dzialka?.powiat ?? null,
       wojewodztwo: dane.dzialka?.wojewodztwo ?? null,
       teryt_gmina: dane.teryt?.teryt_gmina ?? null,
@@ -63,8 +61,11 @@ export function zlozWynik(
   };
 }
 
-/** Krok 2: dom na mapie — obrys z ewidencji do potwierdzenia albo rysowanie po rogach; kondygnacje z ewidencji z „Popraw". */
-export function EkranMapy({ api, adres, teksty, numerKroku, wysokoscKondygnacji, linia, adapter, zrodloKafli, pokazMape, onGotowe, onPomin, onWstecz }: Props) {
+/**
+ * Część „po wyborze adresu”: pobiera dane budynku, kładzie obrys na mapę rodzica,
+ * pokazuje panel (obwód, rzut, kondygnacje z „Popraw”), rysowanie po rogach i przyciski.
+ */
+export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, onGotowe, onPomin, onWstecz }: Props) {
   const [stan, setStan] = useState<Stan>('laduje');
   const [dane, setDane] = useState<OdpowiedzBudynek>(PUSTA);
   const [obrys, setObrys] = useState<Polygon | null>(null);
@@ -72,27 +73,10 @@ export function EkranMapy({ api, adres, teksty, numerKroku, wysokoscKondygnacji,
   const [kondygnacje, setKondygnacje] = useState<number | null>(null);
   const [zrodloKondygnacji, setZrodloKondygnacji] = useState<WynikKrokuAdresu['zrodlo_kondygnacji']>(null);
   const [poprawiam, setPoprawiam] = useState(false);
-  const mapaRef = useRef<HTMLDivElement>(null);
-  const adapterRef = useRef<AdapterMapy | null>(null);
-  const zamontowano = useRef(false);
-
-  // Mapa montuje się raz; obrys nakładamy osobno, gdy przyjdzie z API albo z rysowania.
-  useEffect(() => {
-    if (!pokazMape || !mapaRef.current || zamontowano.current) return;
-    zamontowano.current = true;
-    const a = adapter();
-    adapterRef.current = a;
-    void a.zamontuj(mapaRef.current, { centrum: { lat: adres.lat, lon: adres.lon }, zrodloKafli });
-    return () => {
-      a.zniszcz();
-      adapterRef.current = null;
-      zamontowano.current = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pokazMape]);
 
   useEffect(() => {
     let aktywny = true;
+    setStan('laduje');
     api
       .budynek(adres.lat, adres.lon, { miasto: adres.miasto, ulica: adres.ulica, numer: adres.numer })
       .then((d) => {
@@ -115,6 +99,7 @@ export function EkranMapy({ api, adres, teksty, numerKroku, wysokoscKondygnacji,
       });
     return () => {
       aktywny = false;
+      adapterRef.current?.przerwijRysowanie();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adres.lat, adres.lon]);
@@ -140,7 +125,6 @@ export function EkranMapy({ api, adres, teksty, numerKroku, wysokoscKondygnacji,
       (zmieniony) => setObrys(zmieniony)
     );
   }
-
 
   function cofnijRysowanie() {
     adapterRef.current?.przerwijRysowanie();
@@ -190,7 +174,7 @@ export function EkranMapy({ api, adres, teksty, numerKroku, wysokoscKondygnacji,
 
   if (!pokazMape) {
     return (
-      <div className="ka ka-ekran ka-ekran-mapa ka-bez-mapy">
+      <div className="ka-ekran-mapa ka-bez-mapy">
         {stan === 'laduje' ? <p className="ka-laduje" aria-live="polite">{teksty.szukamy}</p> : kondygnacje === null ? (
           <>
             {wyborKondygnacji}
@@ -204,16 +188,12 @@ export function EkranMapy({ api, adres, teksty, numerKroku, wysokoscKondygnacji,
   }
 
   return (
-    <div className="ka ka-ekran ka-ekran-mapa">
-      {numerKroku && <div className="ka-krok">{wstaw(teksty.krok, { x: numerKroku.x, y: numerKroku.y })}</div>}
-      <h1 className="ka-naglowek">{teksty.naglowekMapa}</h1>
+    <div className="ka-ekran-mapa">
       {stan === 'ewidencja' && <p className="ka-podpowiedz">{wstaw(teksty.obrysZEwidencji, { adres: adres.tekst })}</p>}
       {stan === 'laduje' && <p className="ka-podpowiedz" aria-live="polite">{teksty.szukamy}</p>}
       {stan === 'brak' && <p className="ka-podpowiedz">{teksty.brakObrysu}</p>}
       {stan === 'rysowanie' && <p className="ka-podpowiedz">{teksty.rysowanie}</p>}
       {stan === 'narysowane' && <p className="ka-podpowiedz">{teksty.przeciagnijRogi}</p>}
-
-      <div className="ka-mapa" ref={mapaRef} role="application" aria-label="Mapa z domem" />
 
       {(stan === 'ewidencja' || stan === 'narysowane') && obrys && (
         <div className="ka-panel">

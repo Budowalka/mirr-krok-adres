@@ -10,7 +10,7 @@
   "dependencies": {
     "@geoman-io/leaflet-geoman-free": "^2.20.1",
     "leaflet": "^1.9.4",
-    "mirr-krok-adres": "github:Budowalka/mirr-krok-adres#v0.1.6",
+    "mirr-krok-adres": "github:Budowalka/mirr-krok-adres#v0.2.0",
     "next": "^15.4.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"

@@ -2,16 +2,15 @@ import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import type { Api, Bias } from './api';
 import { useSugestie } from './useSugestie';
 import type { Adres, Podpowiedz, Teksty } from './typy';
-import { wstaw } from './teksty';
 
 type Props = {
   api: Api;
   bias: Bias;
   teksty: Teksty;
-  numerKroku?: { x: number; y: number };
+  /** true = pływa nad mapą (jak w Roofr); false = zwykłe pole (tryb bez mapy) */
+  naMapie: boolean;
   onWybrano: (adres: Adres) => void;
   onPomin: (powod?: string) => void;
-  onWstecz?: () => void;
 };
 
 export function adresZPodpowiedzi(p: Podpowiedz, zrodlo: Adres['zrodlo']): Adres {
@@ -33,8 +32,8 @@ export function adresZPodpowiedzi(p: Podpowiedz, zrodlo: Adres['zrodlo']): Adres
   };
 }
 
-/** Krok 1: pole adresu z podpowiedziami, tryb ręczny jako zapas, link „Wolę podać powierzchnię ręcznie". */
-export function EkranAdresu({ api, bias, teksty, numerKroku, onWybrano, onPomin, onWstecz }: Props) {
+/** Pole adresu z podpowiedziami (nad mapą) i tryb ręczny jako zapas. */
+export function PoleAdresu({ api, bias, teksty, naMapie, onWybrano, onPomin }: Props) {
   const [q, setQ] = useState('');
   const [aktywna, setAktywna] = useState(-1);
   const [reczny, setReczny] = useState(false);
@@ -45,10 +44,9 @@ export function EkranAdresu({ api, bias, teksty, numerKroku, onWybrano, onPomin,
   const [komunikat, setKomunikat] = useState<string | null>(null);
   const { lista, laduje } = useSugestie(api, q, bias);
   const idListy = useId();
-
   const poleRef = useRef<HTMLInputElement>(null);
 
-  // Ulica bez numeru: wstawiamy ją do pola z miastem i spacją, klient dopisuje numer,
+  // Ulica bez numeru: wstawiamy ją do pola ze spacją, klient dopisuje numer,
   // podpowiedzi odpytują się ponownie już z pełną nazwą ulicy.
   function wybierz(p: Podpowiedz) {
     if (p.rodzaj === 'ulica') {
@@ -98,13 +96,9 @@ export function EkranAdresu({ api, bias, teksty, numerKroku, onWybrano, onPomin,
   }
 
   return (
-    <div className="ka ka-ekran ka-ekran-adres">
-      {numerKroku && <div className="ka-krok">{wstaw(teksty.krok, { x: numerKroku.x, y: numerKroku.y })}</div>}
-      <h1 className="ka-naglowek">{teksty.naglowekAdres}</h1>
-      <p className="ka-podpowiedz">{teksty.podpowiedzAdres}</p>
-
+    <div className={naMapie ? 'ka-pole-adres ka-naklad' : 'ka-pole-adres'}>
       {!reczny && (
-        <div className="ka-pole-adres">
+        <>
           <input
             ref={poleRef}
             className="ka-input"
@@ -142,10 +136,10 @@ export function EkranAdresu({ api, bias, teksty, numerKroku, onWybrano, onPomin,
               ))}
             </ul>
           )}
-          <button type="button" className="ka-link" onClick={() => setReczny(true)}>
+          <button type="button" className="ka-link ka-link-naklad" onClick={() => setReczny(true)}>
             {teksty.nieMaNaLiscie}
           </button>
-        </div>
+        </>
       )}
 
       {reczny && (
@@ -166,20 +160,9 @@ export function EkranAdresu({ api, bias, teksty, numerKroku, onWybrano, onPomin,
           <button type="button" className="ka-btn ka-btn-glowny" disabled={szukam} onClick={szukajRecznie}>
             {szukam ? 'Szukam…' : teksty.przyciskSzukaj}
           </button>
+          <button type="button" className="ka-link" onClick={() => setReczny(false)}>{teksty.wrocDoPodpowiedzi}</button>
         </div>
       )}
-
-      <div className="ka-nawigacja">
-        {onWstecz && (
-          <button type="button" className="ka-wstecz" onClick={onWstecz}>
-            ← {teksty.wstecz}
-          </button>
-        )}
-        <button type="button" className="ka-link ka-pomin" onClick={() => onPomin()}>
-          {teksty.pomin}
-        </button>
-      </div>
-      <p className="ka-stopka">{teksty.stopkaAdres}</p>
     </div>
   );
 }

@@ -41,8 +41,10 @@ function renderuj(odpowiedz: OdpowiedzBudynek | Error, props: Partial<Parameters
   const api = { podpowiedzi: vi.fn(), budynek: vi.fn(async () => { if (odpowiedz instanceof Error) throw odpowiedz; return odpowiedz; }) } as unknown as Api;
   const onGotowe = vi.fn();
   const onPomin = vi.fn();
+  const pokazMape = props.pokazMape ?? true;
+  if (pokazMape) adapter.zamontowany = true;
   render(
-    <EkranMapy api={api} adres={ADRES} teksty={DOMYSLNE_TEKSTY} wysokoscKondygnacji={3} adapter={() => adapter} zrodloKafli={{ typ: 'wmts' }}
+    <EkranMapy api={api} adres={ADRES} teksty={DOMYSLNE_TEKSTY} wysokoscKondygnacji={3} adapterRef={{ current: pokazMape ? adapter : null }}
       pokazMape onGotowe={onGotowe} onPomin={onPomin} onWstecz={vi.fn()} {...props} />
   );
   return { adapter, api, onGotowe, onPomin };
@@ -54,7 +56,6 @@ describe('EkranMapy', () => {
     expect(screen.getByText('Szukamy Twojego domu w ewidencji budynków…')).toBeTruthy();
     await screen.findByText('Zgadza się, dalej');
     expect((api.budynek as ReturnType<typeof vi.fn>).mock.calls[0]).toEqual([52.2705286, 20.2888357, { miasto: 'Sochaczew', ulica: 'Zwierzyniecka', numer: '5' }]);
-    expect(adapter.zamontowany).toBe(true);
     expect(adapter.obrys).toEqual(OBRYS_198);
     expect(screen.getByText('44,2 m')).toBeTruthy();
     expect(screen.getByText('106,7 m²')).toBeTruthy();
@@ -151,7 +152,6 @@ describe('EkranMapy', () => {
   it('pokazMape=false: dane zbierane, bez mapy; przy kondygnacjach z ewidencji od razu onGotowe, bez nich pytanie', async () => {
     const a = renderuj(EWIDENCJA, { pokazMape: false });
     await waitFor(() => expect(a.onGotowe).toHaveBeenCalled());
-    expect(a.adapter.zamontowany).toBe(false);
     expect(a.onGotowe.mock.calls[0][0]).toMatchObject({ zrodlo_obrysu: 'ewidencja', kondygnacje: 1, identyfikator_egib: '142801_1.0001.198.1_BUD' });
 
     const b = renderuj({ ...EWIDENCJA, kondygnacje: null, zrodlo_kondygnacji: null }, { pokazMape: false });

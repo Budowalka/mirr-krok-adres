@@ -57,7 +57,7 @@ export function utworzAdapterLeaflet(): AdapterMapy {
   }
 
   return {
-    async zamontuj(el, { centrum, zrodloKafli }) {
+    async zamontuj(el, { centrum, zoom, zrodloKafli }) {
       // Geoman przy imporcie szuka globalnego `L` (window.L), więc Leaflet musi być
       // załadowany i wystawiony PRZED importem Geomana — równoległy import kończył się
       // „ReferenceError: L is not defined" (demo, 13.09).
@@ -65,7 +65,8 @@ export function utworzAdapterLeaflet(): AdapterMapy {
       L = (leaflet.default ?? leaflet) as typeof Leaflet;
       (window as unknown as { L: typeof Leaflet }).L = L;
       await import('@geoman-io/leaflet-geoman-free');
-      mapa = L.map(el, { zoomControl: true, attributionControl: true, tap: true } as Leaflet.MapOptions).setView([centrum.lat, centrum.lon], 19);
+      mapa = L.map(el, { zoomControl: false, attributionControl: true, tap: true } as Leaflet.MapOptions).setView([centrum.lat, centrum.lon], zoom ?? 19);
+      L.control.zoom({ position: 'bottomright' }).addTo(mapa);
       kafle(L, zrodloKafli).addTo(mapa);
       const pm = (mapa as unknown as { pm?: { setLang?: (kod: string) => void; addControls?: (o: unknown) => void } }).pm;
       pm?.setLang?.('pl');
@@ -89,6 +90,15 @@ export function utworzAdapterLeaflet(): AdapterMapy {
         narysuj(oczekujacy.obrys, oczekujacy.dzialka);
         oczekujacy = null;
       }
+    },
+    przelec(centrum, zoom) {
+      if (!mapa) return;
+      oczekujacy = null;
+      warstwaObrysu?.remove();
+      warstwaDzialki?.remove();
+      warstwaObrysu = null;
+      warstwaDzialki = null;
+      mapa.flyTo([centrum.lat, centrum.lon], zoom, { duration: 1.2 });
     },
     pokazObrys(obrys, dzialka) {
       if (!L || !mapa) {

@@ -94,6 +94,9 @@ export type Teksty = {
   przyciskPokaz: string;
   nieMaNaLiscie: string;
   dopiszNumer: string;
+  wrocDoPodpowiedzi: string;
+  zmienAdres: string;
+  podpowiedzMapa: string;
   poleUlica: string;
   poleKod: string;
   poleMiasto: string;

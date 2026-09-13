@@ -7,7 +7,9 @@ import type { ZrodloKafli } from '../typy';
  * w jsdom i do demo bez sieci.
  */
 export interface AdapterMapy {
-  zamontuj(el: HTMLElement, opcje: { centrum: { lat: number; lon: number }; zrodloKafli: ZrodloKafli }): Promise<void>;
+  zamontuj(el: HTMLElement, opcje: { centrum: { lat: number; lon: number }; zoom?: number; zrodloKafli: ZrodloKafli }): Promise<void>;
+  /** Płynny przelot do punktu (po wyborze adresu), zanim przyjdzie obrys. */
+  przelec(centrum: { lat: number; lon: number }, zoom: number): void;
   /** Rysuje obrys domu (akcent) i opcjonalnie działkę (cienka linia); null czyści. */
   pokazObrys(obrys: Polygon | null, dzialka?: Polygon | null): void;
   /**
