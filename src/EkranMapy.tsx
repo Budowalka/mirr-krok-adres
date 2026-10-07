@@ -4,7 +4,7 @@ import type { Api } from './api';
 import { obwodM, rzutM2, zGeoJson } from './geometria';
 import type { AdapterMapy } from './mapa/adapter';
 import { opisKondygnacji, wstaw } from './teksty';
-import { scalDzialke } from './dzialka';
+import { opisDzialki, scalDzialke } from './dzialka';
 import { usePozwolenie } from './pozwolenie';
 import { PUSTA, zlozWynik } from './wynik';
 import type { Adres, DodatkiKroku, DzialkaZListy, LiniaPanelu, OdpowiedzBudynek, Teksty, WynikKrokuAdresu, ZrodloPunktu } from './typy';
@@ -106,6 +106,8 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
   const rzut = obrys ? Math.round(rzutM2(ring) * 10) / 10 : null;
   const liniaDodatkowa = linia ? linia({ obwod_m: obwod, rzut_m2: rzut, kondygnacje }) : null;
   const pytamOKondygnacje = kondygnacje === null || poprawiam;
+  // Pinezka i numer działki: w podpowiedzi opis działki zamiast współrzędnych (klient nie zna „Punkt na mapie 52.18…”).
+  const miejsceWPodpowiedzi = zrodloPunktu !== 'adres' && dane.dzialka ? opisDzialki(dane.dzialka) : adres.tekst;
 
   function zacznijRysowac() {
     anulujOczekiwanie();
@@ -217,7 +219,7 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
 
   return (
     <div className="ka-ekran-mapa">
-      {stan === 'ewidencja' && <p className="ka-podpowiedz">{wstaw(teksty.obrysZEwidencji, { adres: adres.tekst })}</p>}
+      {stan === 'ewidencja' && <p className="ka-podpowiedz">{wstaw(teksty.obrysZEwidencji, { adres: miejsceWPodpowiedzi })}</p>}
       {stan === 'laduje' && <p className="ka-podpowiedz" aria-live="polite">{teksty.szukamy}</p>}
       {stan === 'brak' && <p className="ka-podpowiedz">{teksty.brakObrysu}</p>}
       {stan === 'rysowanie' && <p className="ka-podpowiedz">{teksty.rysowanie}</p>}

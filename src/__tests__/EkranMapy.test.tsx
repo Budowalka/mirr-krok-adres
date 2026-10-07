@@ -313,4 +313,20 @@ describe('EkranMapy: v0.3.0 (źródło punktu, wybrana działka, pozwolenie)', (
     expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).toBeNull();
     expect((screen.getByText('Zgadza się, dalej').closest('button') as HTMLButtonElement).disabled).toBe(false);
   });
+
+  it('pinezka i numer działki z obrysem z ewidencji: podpowiedź z opisem działki, nie ze współrzędnymi', async () => {
+    const pinezka = adresZPunktu({ lat: ADRES.lat, lon: ADRES.lon }, null);
+    renderujV3(EWIDENCJA, { adres: pinezka, zrodloPunktu: 'pinezka' });
+    expect(await screen.findByText('Działka 198/2, obręb Chodaków, Sochaczew (miasto). Obrys wzięliśmy z ewidencji budynków.')).toBeTruthy();
+    expect(screen.queryByText(/Punkt na mapie/)).toBeNull();
+    cleanup();
+
+    renderujV3(EWIDENCJA, { adres: adresZPunktu(WYBRANA.punkt, WYBRANA), wybrana: WYBRANA, zrodloPunktu: 'numer_dzialki' });
+    expect(await screen.findByText('Działka 199, obręb Chodaków, Sochaczew (miasto). Obrys wzięliśmy z ewidencji budynków.')).toBeTruthy();
+  });
+
+  it('źródło adres: podpowiedź przy obrysie z ewidencji dalej z tekstem adresu', async () => {
+    renderujV3(EWIDENCJA);
+    expect(await screen.findByText('Zwierzyniecka 5, Sochaczew. Obrys wzięliśmy z ewidencji budynków.')).toBeTruthy();
+  });
 });
