@@ -15,7 +15,7 @@ działka (numer, obręb, gmina, powiat, województwo, powierzchnia, obrys), inne
 czy powiat jest w bazie. Komponent **nie liczy niczego branżowego** — elewację, dach czy podłogi liczy landing.
 
 Pierwszy odbiorca: **On the Wall Design (Mariusz Surmacz)**, ocieplenia w Zagłębiu. Następni: Grey House
-(tylko adres, bez mapy), Niezawodne Instalacje.
+(tylko adres, bez mapy), Niezawodne Instalacje. Od v0.3.0 także Po Twojemu (elektryk, Szczecin): pinezka, numer działki i karta pozwolenia na budowę.
 
 Repo jest publiczne wyłącznie po to, żeby Vercel pobrał je jako zależność git bez tokenu. Nie ma tu
 danych klientów, tekstów per firma ani kluczy: wszystko wchodzi propsami z landingu, a klucz MIRR zostaje
@@ -28,11 +28,12 @@ do MIRR (`GET /api/v1/geo/podpowiedzi|budynek|zasieg`, klucz API firmy ze scope'
 MIRR łączy ULDK (obrys budynku i działki), BDOT10k z lokalnej bazy (kondygnacje, funkcja, EGiB;
 import powiatu `bin/rake geo:import_powiat[TERYT]`), Photon (podpowiedzi) i geokoder GUGiK (TERYT).
 Spec: `smova-3/docs/superpowers/specs/2026-09-13-komponent-krok-adres-design.md`.
+Od v0.3.0 dochodzą GET /api/v1/geo/dzialka (scope geo:dzialka) i GET /api/v1/geo/pozwolenie (scope geo:pozwolenie); trasy proxy landingu muszą mieć te akcje na liście (wzór: demo/src/app/api/geo/[akcja]/route.ts). Bez nich numer działki pokazuje komunikat o chwilowym problemie, a karta pozwolenia się nie pojawia; reszta kroku działa.
 
 ## Instalacja w landingu (Next 15, React 19)
 
 ```bash
-npm i github:Budowalka/mirr-krok-adres#v0.2.2 leaflet @geoman-io/leaflet-geoman-free
+npm i github:Budowalka/mirr-krok-adres#v0.3.0 leaflet @geoman-io/leaflet-geoman-free
 ```
 
 `next.config.ts`:
@@ -78,6 +79,45 @@ Tokeny stylu w `globals.css` landingu:
 gdy ewidencja ich nie zna). Kafle domyślnie z WMTS Geoportalu (0,1 s na kafel); `zrodloKafli={{ typ: 'wms' }}` przełącza na WMS
 (2–3 s), `{ typ: 'xyz', url }` na innego dostawcę.
 
+## Nowe w v0.3.0: pinezka, numer działki, pozwolenie na budowę
+
+Wszystko włącza się propsami; bez nich krok działa jak v0.2 (pilnuje tego `src/__tests__/zgodnosc.test.tsx`).
+
+| Prop | Domyślnie | Co robi |
+|---|---|---|
+| `wejscia` | `['adres']` | Zakładki: `'adres'`, `'pinezka'` (dotknięcie mapy; wymaga mapy), `'numer_dzialki'` („10 64/4” → wybór gminy). Pierwsza pozycja = domyślna zakładka. |
+| `cel` | `'budynek'` | `'dzialka'`: po wskazaniu miejsca ekran „To Twoja działka?” bez rysowania domu i bez pytania o kondygnacje. |
+| `sprawdzPozwolenie` | `false` | Po znalezieniu działki krok pyta o pozwolenie na budowę (czeka najwyżej 3 s po kliknięciu) i oddaje je w drugim argumencie `onGotowe(wynik, { pozwolenie })`. |
+| `szeroko` | `false` | Od 900 px mapa po lewej, pytania i przyciski po prawej. |
+
+Przykład (elektryk):
+
+```tsx
+import { KartaBudowy, KrokAdresu, pozwolenieDoFormData, type Pozwolenie, type WynikKrokuAdresu } from 'mirr-krok-adres';
+
+<KrokAdresu
+  api="/api/geo"
+  bias={{ lat: 53.43, lon: 14.55 }}
+  wejscia={['adres', 'pinezka', 'numer_dzialki']}
+  cel="dzialka"
+  sprawdzPozwolenie
+  szeroko
+  onGotowe={(dom, dodatki) => { /* form_data.dom = dom; jeśli dodatki?.pozwolenie → pokaż kartę */ }}
+  onPomin={() => { /* lead bez adresu */ }}
+/>
+
+<KartaBudowy
+  pozwolenie={pozwolenie}            // null = nic się nie renderuje
+  dzialka={dom.dzialka}
+  onTak={(p) => zapisz({ pozwolenie: pozwolenieDoFormData(p, true) })}
+  onNie={(p) => zapisz({ pozwolenie: pozwolenieDoFormData(p, false) })}
+/>
+```
+
+Kontrakt wyniku dostaje dwa pola: `zrodlo_punktu` (`'adres' | 'pinezka' | 'numer_dzialki'`) i `punkt` (`{ lat, lon }`). Przy pinezce i numerze działki `adres.ulica` i `adres.numer` są puste, `adres.zrodlo` to `'reczny'`, a `adres.tekst` opisuje działkę („Działka 64/4, obręb 0010, Pruszków”). Własny adapter mapy z v0.2 działa dalej; zakładka pinezki chowa się, gdy adapter nie ma `wybierzPunkt` i `pokazPinezke`.
+
+Demo bez backendu: `cd demo && GEO_MOCK=wszystko npm run dev`; ustawienia z adresu strony, np. `/?wejscia=adres,pinezka,numer_dzialki&cel=dzialka&pozwolenie=1&szeroko=1&obszar=pruszkow`. `GEO_MOCK=nowe` podaje z mocka tylko `dzialka` i `pozwolenie` (do czasu wdrożenia ich w MIRR).
+
 ## Kontrakt wyjścia
 
 `WynikKrokuAdresu` w `src/typy.ts` (pola: `adres`, `obrys`, `zrodlo_obrysu` ewidencja/reczne/brak,
@@ -99,3 +139,8 @@ Testy w jsdom używają `FalszywyAdapterMapy` (bez Leafleta); prawdziwa mapa = `
 - Identyfikator budynku z ULDK ≠ identyfikator EGiB z BDOT10k dla tego samego obrysu; MIRR dopasowuje po punkcie.
 - `posList` w GML to pary easting northing (EPSG:2180); obwód i rzut liczymy po rzutowaniu, nie z lon/lat.
 - Photon to publiczna instancja bez gwarancji; na produkcję własna instancja albo Google Places (MIRR ma zaczep).
+- Domyślna ikona `L.marker` psuje się w bundlerze (zła ścieżka do obrazków), dlatego pinezka używa `divIcon`.
+- W komponencie nie wolno używać `<form>`: landing osadza krok w swoim formularzu, a zagnieżdżone formularze są niepoprawnym HTML.
+- Do testu w demo używaj `npm pack`, nie `npm link`: link duplikuje Reacta i hooki przestają działać.
+- Datę decyzji o pozwoleniu formatuj z napisu (RRRR-MM-DD), nie przez `new Date`, bo strefa czasowa przesuwa dzień.
+- Adapter Leaflet jest jednorazowy po `zniszcz()`: fabryka `adapterMapy` musi przy każdym wywołaniu zwracać NOWY adapter (bez singletona), inaczej ponowne zamontowanie w StrictMode zostawia stronę bez mapy.
