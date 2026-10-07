@@ -33,7 +33,7 @@ export type DzialkaZListy = {
 
 /**
  * Wpis z rejestru pozwoleń GUNB (MIRR GET /api/v1/geo/pozwolenie, plan A). Od v0.3.0.
- * Bez danych osobowych: inwestora, projektanta i adresu nie ma w MIRR ani tutaj.
+ * Bez danych osobowych z rejestru: osób i adresów nie ma w MIRR ani tutaj.
  */
 export type Pozwolenie = {
   numer_gunb: string;
