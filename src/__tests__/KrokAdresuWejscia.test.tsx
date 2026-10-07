@@ -178,4 +178,15 @@ describe('KrokAdresu v0.3.0: wejścia, cel i pozwolenie', () => {
     expect(Array.from(korzen.children).map((e) => e.className)).toEqual(['ka-bok', 'ka-mapa-obszar', 'ka-bok-dol']);
     expect(korzen.querySelector('.ka-bok [role="tablist"]')).toBeTruthy();
   });
+
+  it('kliknięcie aktywnej zakładki „Zaznacz na mapie” nie zdejmuje postawionej pinezki', () => {
+    const adapter = new FalszywyAdapterMapy();
+    render(<KrokAdresu api="/api/geo" wejscia={['adres', 'pinezka']} cel="dzialka" onGotowe={vi.fn()} onPomin={vi.fn()} adapterMapy={() => adapter} />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Zaznacz na mapie' }));
+    act(() => adapter.dotknij(PRUSZKOW));
+    fireEvent.click(screen.getByRole('tab', { name: 'Zaznacz na mapie' }));
+    expect(wybrana()).toBe('Zaznacz na mapie');
+    expect(adapter.pinezka).toEqual(PRUSZKOW);
+    expect((screen.getByText('To tutaj, dalej') as HTMLButtonElement).disabled).toBe(false);
+  });
 });

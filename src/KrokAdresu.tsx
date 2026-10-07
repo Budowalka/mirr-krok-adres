@@ -91,6 +91,8 @@ export function KrokAdresu({
   }, [aktywne, miejsce, pokazMape, pinezkaMozliwa]);
 
   function zmienTryb(w: Wejscie) {
+    // Ponowne kliknięcie aktywnej zakładki nie zdejmuje postawionej pinezki.
+    if (w === aktywne) return;
     adapterRef.current?.pokazPinezke?.(null);
     adapterRef.current?.pokazObrys(null, null);
     setPinezka(null);
