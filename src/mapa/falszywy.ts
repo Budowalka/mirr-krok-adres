@@ -1,4 +1,5 @@
 import type { Polygon } from 'geojson';
+import type { Punkt } from '../typy';
 import type { AdapterMapy } from './adapter';
 
 /** Adapter bez mapy: zapamiętuje wywołania, a test/demo zamyka rysowanie przez `zakonczRysowanie`. */
@@ -37,6 +38,21 @@ export class FalszywyAdapterMapy implements AdapterMapy {
     this.rysowanie = null;
     this.zmiana = null;
     this.edycjaWlaczona = false;
+  }
+  wybieranie: ((punkt: Punkt) => void) | null = null;
+  pinezka: Punkt | null = null;
+  wybierzPunkt(onPunkt: (punkt: Punkt) => void) {
+    this.wybieranie = onPunkt;
+  }
+  pokazPinezke(punkt: Punkt | null) {
+    this.pinezka = punkt;
+  }
+  przerwijWybieranie() {
+    this.wybieranie = null;
+  }
+  /** Pomocnik testowy: „użytkownik dotknął mapy”. */
+  dotknij(punkt: Punkt) {
+    this.wybieranie?.(punkt);
   }
   zniszcz() {
     this.zniszczony = true;

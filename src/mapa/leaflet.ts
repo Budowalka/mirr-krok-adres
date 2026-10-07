@@ -1,12 +1,17 @@
 import type { Polygon } from 'geojson';
 import type * as Leaflet from 'leaflet';
 import type { AdapterMapy } from './adapter';
-import type { ZrodloKafli } from '../typy';
+import type { Punkt, ZrodloKafli } from '../typy';
 
 const WMS_ORTO = 'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution';
 // WMTS Geoportalu w siatce EPSG:3857 = zwykłe kafle XYZ, 0,1 s na kafel (WMS: 2–3 s).
 const WMTS_ORTO =
   'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMTS/StandardResolution?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTOFOTOMAPA&STYLE=default&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=EPSG:3857:{z}&TILEROW={y}&TILECOL={x}';
+
+// Własna ikona zamiast domyślnej L.marker: domyślna ładuje obrazki z leaflet/dist/images,
+// które w bundlerze Next mają złe ścieżki (pusty kwadrat). className zastępuje „leaflet-div-icon” (biały kwadrat).
+const PINEZKA_SVG =
+  '<svg viewBox="0 0 36 48" width="36" height="48" aria-hidden="true" focusable="false"><path d="M18 2C9.2 2 2 9 2 17.6 2 29.4 18 46 18 46s16-16.6 16-28.4C34 9 26.8 2 18 2z" fill="currentColor" stroke="#fff" stroke-width="2"/><circle cx="18" cy="17.5" r="6" fill="#fff"/></svg>';
 
 /**
  * Prawdziwa mapa: Leaflet + Geoman (rysowanie po rogach, dotyk) + ortofotomapa
@@ -24,6 +29,10 @@ export function utworzAdapterLeaflet(): AdapterMapy {
   // Odpowiedź z MIRR bywa szybsza niż dynamiczny import Leafleta: obrys czeka tu na mapę
   // (bez tego rysowanie i przybliżenie ginęły — zrzut Piotra 13.09: zdjęcie „daleko”, bez obrysu).
   let oczekujacy: { obrys: Polygon | null; dzialka: Polygon | null } | null = null;
+
+  // Tryb pinezki: callback może przyjść przed załadowaniem Leafleta (zamontuj jest asynchroniczne).
+  let onPunkt: ((punkt: Punkt) => void) | null = null;
+  let pinezka: Leaflet.Marker | null = null;
 
   function narysuj(obrys: Polygon | null, dzialka: Polygon | null) {
     if (!L || !mapa) return;
@@ -68,6 +77,11 @@ export function utworzAdapterLeaflet(): AdapterMapy {
       mapa = L.map(el, { zoomControl: false, attributionControl: true, tap: true } as Leaflet.MapOptions).setView([centrum.lat, centrum.lon], zoom ?? 19);
       L.control.zoom({ position: 'bottomright' }).addTo(mapa);
       kafle(L, zrodloKafli).addTo(mapa);
+      mapa.on('click', (e: Leaflet.LeafletMouseEvent) => {
+        onPunkt?.({ lat: e.latlng.lat, lon: e.latlng.lng });
+      });
+      // Podwójne dotknięcie przybliża mapę i przestawia pinezkę; w trybie pinezki wyłączamy przybliżanie.
+      if (onPunkt) mapa.doubleClickZoom.disable();
       const pm = (mapa as unknown as { pm?: { setLang?: (kod: string) => void; addControls?: (o: unknown) => void } }).pm;
       pm?.setLang?.('pl');
       mapa.on('pm:create', (e: unknown) => {
@@ -112,6 +126,25 @@ export function utworzAdapterLeaflet(): AdapterMapy {
       onZmieniono = onZmiana;
       warstwaObrysu.eachLayer((w) => wlaczEdycje(w as Leaflet.Polygon));
     },
+    wybierzPunkt(cb) {
+      onPunkt = cb;
+      mapa?.doubleClickZoom.disable();
+    },
+    przerwijWybieranie() {
+      onPunkt = null;
+      mapa?.doubleClickZoom.enable();
+    },
+    pokazPinezke(punkt) {
+      if (!L || !mapa) return;
+      pinezka?.remove();
+      pinezka = null;
+      if (!punkt) return;
+      pinezka = L.marker([punkt.lat, punkt.lon], {
+        icon: L.divIcon({ className: 'ka-pinezka', html: PINEZKA_SVG, iconSize: [36, 48], iconAnchor: [18, 46] }),
+        interactive: false,
+        keyboard: false,
+      }).addTo(mapa);
+    },
     rysuj(onGotowe, onZmiana) {
       if (!mapa) return;
       onNarysowano = onGotowe;
@@ -134,6 +167,8 @@ export function utworzAdapterLeaflet(): AdapterMapy {
       warstwaObrysu?.eachLayer((w) => (w as unknown as { pm?: { disable(): void } }).pm?.disable());
     },
     zniszcz() {
+      onPunkt = null;
+      pinezka = null;
       mapa?.remove();
       mapa = null;
       warstwaObrysu = null;
