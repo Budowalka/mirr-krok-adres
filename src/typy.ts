@@ -116,9 +116,9 @@ export type WynikKrokuAdresu = {
   inne_budynki_na_dzialce: OdpowiedzBudynek['inne_budynki_na_dzialce'];
   powiat: OdpowiedzBudynek['powiat'];
   /** Od v0.3.0: adres (podpowiedź albo ręczny) / pinezka / numer działki. */
-  zrodlo_punktu?: ZrodloPunktu;
+  zrodlo_punktu: ZrodloPunktu;
   /** Od v0.3.0: punkt, od którego szukaliśmy (adres, pinezka albo punkt działki). Spec 5.3 liczy z niego dojazd. */
-  punkt?: Punkt;
+  punkt: Punkt;
 };
 
 /** wmts (domyślne, Geoportal, szybkie) · wms (Geoportal, 2–3 s na kafel) · xyz (inny dostawca) */

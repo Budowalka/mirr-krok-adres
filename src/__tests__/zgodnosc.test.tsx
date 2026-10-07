@@ -62,7 +62,10 @@ describe('zgodność z v0.2.2 (konsument bez nowych propsów)', () => {
 
     expect(onGotowe).toHaveBeenCalledTimes(1);           // synchronicznie, jak w v0.2.2
     expect(onGotowe.mock.calls[0]).toHaveLength(1);       // bez drugiego argumentu
-    expect(onGotowe.mock.calls[0][0]).toEqual(ZLOTY_V022);
+    const { zrodlo_punktu, punkt, ...stare } = onGotowe.mock.calls[0][0];
+    expect(stare).toEqual(ZLOTY_V022);                 // wszystkie pola v0.2.2 bez zmian (asercja nie osłabiona)
+    expect(zrodlo_punktu).toBe('adres');               // pola dodane w v0.3.0 (kontrakt tylko się rozszerza)
+    expect(punkt).toEqual({ lat: 50.27, lon: 19.16 });
     const sciezki = f.mock.calls.map(([url]) => new URL(url, 'http://localhost').pathname);
     expect(new Set(sciezki)).toEqual(new Set(['/api/geo/podpowiedzi', '/api/geo/budynek']));
   });
@@ -77,7 +80,10 @@ describe('zgodność z v0.2.2 (konsument bez nowych propsów)', () => {
     vi.useRealTimers();
     await waitFor(() => expect(onGotowe).toHaveBeenCalledTimes(1));
     expect(onGotowe.mock.calls[0]).toHaveLength(1);
-    expect(onGotowe.mock.calls[0][0]).toEqual(ZLOTY_V022);
+    const { zrodlo_punktu, punkt, ...stare } = onGotowe.mock.calls[0][0];
+    expect(stare).toEqual(ZLOTY_V022);                 // wszystkie pola v0.2.2 bez zmian (asercja nie osłabiona)
+    expect(zrodlo_punktu).toBe('adres');               // pola dodane w v0.3.0 (kontrakt tylko się rozszerza)
+    expect(punkt).toEqual({ lat: 50.27, lon: 19.16 });
   });
 
   it('własny adapter z v0.2 (tylko stare metody) pasuje do typu AdapterMapy, a krok się renderuje', () => {
