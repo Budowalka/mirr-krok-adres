@@ -137,4 +137,14 @@ describe('EkranDzialki (cel „dzialka”)', () => {
     await act(async () => { rozwiaz(P); });
     expect(onGotowe).not.toHaveBeenCalled();
   });
+
+  it('po oddaniu wyniku z pozwoleniem przycisk wraca do normy (krok zostaje na ekranie)', async () => {
+    let rozwiaz: (p: Pozwolenie | null) => void = () => {};
+    const { onGotowe } = renderuj(BUDYNEK_PRUSZKOW, { sprawdzPozwolenie: true, pozwolenie: () => new Promise((r) => { rozwiaz = r; }) });
+    fireEvent.click(await screen.findByText('Tak, to moja działka'));
+    await act(async () => { rozwiaz(P); });
+    await waitFor(() => expect(onGotowe).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText('Chwileczkę…')).toBeNull();
+    expect((screen.getByText('Tak, to moja działka') as HTMLButtonElement).disabled).toBe(false);
+  });
 });

@@ -159,7 +159,10 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
     const moje = ++oczekiwanie.current;
     setCzekam(true);
     void czekajNaPozwolenie().then((pozwolenie) => {
-      if (oczekiwanie.current === moje) onGotowe(wynik, { pozwolenie });
+      if (oczekiwanie.current !== moje) return;
+      onGotowe(wynik, { pozwolenie });
+      // Gdy strona zostawia krok na ekranie, przycisk nie może utknąć na „Chwileczkę…”.
+      setCzekam(false);
     });
   }
 

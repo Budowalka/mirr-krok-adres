@@ -78,7 +78,10 @@ export function EkranDzialki({ api, adres, zrodloPunktu, wybrana, teksty, adapte
     const moje = ++oczekiwanie.current;
     setCzekam(true);
     void czekajNaPozwolenie().then((pozwolenie) => {
-      if (oczekiwanie.current === moje) onGotowe(wynik, { pozwolenie });
+      if (oczekiwanie.current !== moje) return;
+      onGotowe(wynik, { pozwolenie });
+      // Gdy strona zostawia krok na ekranie, przycisk nie może utknąć na „Chwileczkę…”.
+      setCzekam(false);
     });
   }
 

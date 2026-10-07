@@ -303,4 +303,14 @@ describe('EkranMapy: v0.3.0 (źródło punktu, wybrana działka, pozwolenie)', (
     await rozwiaz();
     expect(onGotowe).not.toHaveBeenCalled();
   });
+
+  it('po oddaniu wyniku z pozwoleniem przycisk wraca do normy (krok zostaje na ekranie)', async () => {
+    const { onGotowe, rozwiaz } = zWolnymPozwoleniem();
+    await screen.findByText('Zgadza się, dalej');
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    await rozwiaz();
+    await waitFor(() => expect(onGotowe).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).toBeNull();
+    expect((screen.getByText('Zgadza się, dalej').closest('button') as HTMLButtonElement).disabled).toBe(false);
+  });
 });
