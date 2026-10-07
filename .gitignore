@@ -6,3 +6,4 @@ demo/.env*
 !demo/.env.example
 demo/.vercel
 *.tsbuildinfo
+*.tgz
