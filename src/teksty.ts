@@ -1,4 +1,4 @@
-import type { Teksty } from './typy';
+import type { Teksty, TekstyKartyBudowy } from './typy';
 
 /** Teksty domyślne (forma Ty, po polsku, bez żargonu). Landing nadpisuje wybrane przez props.teksty. */
 export const DOMYSLNE_TEKSTY: Teksty = {
@@ -40,6 +40,33 @@ export const DOMYSLNE_TEKSTY: Teksty = {
   dalej: 'Dalej',
   wstecz: 'Wstecz',
   nieZnaleziono: 'Nie udało się znaleźć tego adresu na mapie. Podasz powierzchnię ręcznie.',
+  wejsciaEtykieta: 'Jak chcesz wskazać miejsce?',
+  wejscieAdres: 'Adres',
+  wejsciePinezka: 'Zaznacz na mapie',
+  wejscieDzialka: 'Numer działki',
+  naglowekPinezka: 'Zaznacz swoją działkę',
+  podpowiedzPinezka: 'Przybliż mapę i dotknij miejsca, gdzie stoi albo stanie dom.',
+  dotknijMape: 'Dotknij mapy, żeby postawić pinezkę.',
+  toTutaj: 'To tutaj, dalej',
+  punktNaMapie: 'Punkt na mapie',
+  naglowekDzialka: 'Podaj numer działki',
+  podpowiedzDzialka: 'Wpisz obręb i numer działki, np. Dobra 1006 albo 10 64/4. Znajdziesz je w pozwoleniu na budowę albo w wypisie z rejestru gruntów.',
+  poleDzialka: 'Obręb i numer działki',
+  przykladDzialki: 'np. Dobra 1006',
+  przyciskSzukajDzialki: 'Znajdź działkę',
+  szukamDzialki: 'Szukam działki…',
+  zlyNumerDzialki: 'Wpisz obręb (nazwę albo numer) i numer działki oddzielone spacją, np. Dobra 1006 albo 10 64/4.',
+  brakDzialki: 'Nie znaleźliśmy takiej działki. Sprawdź oba numery albo zaznacz działkę na mapie.',
+  bladDzialki: 'Nie udało się teraz sprawdzić działki. Spróbuj jeszcze raz albo zaznacz ją na mapie.',
+  wybierzGmine: 'W której gminie jest ta działka?',
+  gminaOpis: 'obręb {obreb}',
+  naglowekPotwierdzDzialke: 'To Twoja działka?',
+  szukamWEwidencji: 'Sprawdzamy działkę w ewidencji…',
+  powierzchniaDzialki: 'Powierzchnia działki',
+  toMojaDzialka: 'Tak, to moja działka',
+  toNieTaDzialka: 'To nie ta działka',
+  brakDanychDzialki: 'Nie udało się sprawdzić tej działki w ewidencji. Możesz przejść dalej, sprawdzimy ją sami.',
+  sprawdzamy: 'Chwileczkę…',
 };
 
 /** Opis słowny, bez powtarzania liczby (panel pokazuje „{n}, {opis}”). */
@@ -55,3 +82,16 @@ export function opisKondygnacji(n: number | null): string {
 export function wstaw(szablon: string, wartosci: Record<string, string | number>): string {
   return szablon.replace(/\{(\w+)\}/g, (_, k) => String(wartosci[k] ?? ''));
 }
+
+/** Teksty karty „To Twoja budowa?” (forma Ty). Landing nadpisuje przez props.teksty karty. */
+export const DOMYSLNE_TEKSTY_KARTY: TekstyKartyBudowy = {
+  naglowek: 'To Twoja budowa?',
+  wstep: 'W rejestrze pozwoleń na budowę jest wpis dla tej działki.',
+  decyzja: 'Pozwolenie na budowę wydane {data}',
+  domJednorodzinny: 'Dom jednorodzinny',
+  jedenLokal: 'jeden lokal',
+  dwaLokale: 'dwa lokale',
+  tak: 'Tak, to moja budowa',
+  nie: 'To inny budynek',
+  poCoPytamy: 'Sprawdzamy rejestr pozwoleń na budowę, żeby nie pytać Cię o to, co już w nim jest. Z rejestru nie bierzemy żadnych danych osobowych.',
+};

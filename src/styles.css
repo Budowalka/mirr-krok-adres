@@ -52,9 +52,9 @@
 .ka-naklad .ka-lista { box-shadow: 0 6px 20px rgba(0,0,0,.25); }
 .ka-naklad .ka-reczny { background: #fff; border-radius: var(--ka-promien); padding: 14px 16px; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
 .ka-link-naklad { display: inline-block; margin-top: 6px; background: rgba(255,255,255,.92); padding: 6px 10px; border-radius: var(--ka-promien); }
-.ka-pigulka { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 1100; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #fff; border-radius: var(--ka-promien); padding: 11px 14px; box-shadow: 0 2px 10px rgba(0,0,0,.25); font-weight: 600; font-size: 15px; }
+.ka-pigulka { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 1100; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #fff; border-radius: var(--ka-promien); padding: 4px 6px 4px 14px; box-shadow: 0 2px 10px rgba(0,0,0,.25); font-weight: 600; font-size: 15px; }
 .ka-pigulka-tekst { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ka-pigulka-zmien { padding: 0; flex: none; }
+.ka-pigulka-zmien { padding: 0 10px; flex: none; }
 .ka-ekran-mapa { display: flex; flex-direction: column; gap: 14px; }
 .ka-panel { border: 1px solid var(--ka-linia); border-radius: var(--ka-promien); background: #fff; padding: 4px 16px; }
 .ka-panel-wiersz { display: grid; grid-template-columns: 1fr auto; column-gap: 12px; align-items: baseline; padding: 11px 0; border-top: 1px solid var(--ka-linia); }
@@ -77,3 +77,58 @@
 }
 /* Geoman: przyciski trybu rysowania są nasze (ka-btn), ukrywamy pasek Geomana */
 .leaflet-pm-toolbar { display: none; }
+
+/* ── v0.3.0 ─────────────────────────────────────────────────────────────────────────────
+   Cele dotyku ≥ 44 × 44 px (spec elektryka 3.0) dla wszystkich przycisków i linków komponentu,
+   także starych („Zmień”, „Wstecz”, „Popraw”) i kontrolek przybliżenia mapy. */
+:where(.ka) button, .ka-link, .ka-wstecz { min-height: 44px; min-width: 44px; }
+.ka .leaflet-bar a, .ka .leaflet-touch .leaflet-bar a { width: 44px; height: 44px; line-height: 44px; font-size: 22px; }
+
+/* Zakładki wejścia: zaznaczenie obramowaniem i paskiem u dołu, nie samym kolorem */
+.ka-wejscia { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; background: var(--ka-tlo-2); border-radius: var(--ka-promien); padding: 4px; }
+.ka-wejscie { min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 10px; border: 2px solid transparent; border-radius: var(--ka-promien); background: transparent; color: var(--ka-tekst); font-family: inherit; font-size: 15px; font-weight: 600; line-height: 1.2; cursor: pointer; text-align: center; }
+.ka-wejscie svg { flex: none; width: 24px; height: 24px; }
+.ka-wejscie-aktywne { background: #fff; border-color: var(--ka-akcent); color: var(--ka-akcent-ciemny); box-shadow: inset 0 -4px 0 var(--ka-akcent); }
+@media (max-width: 420px) { .ka-wejscie { flex-direction: column; gap: 4px; font-size: 13px; padding: 6px 4px; } }
+
+/* Numer działki i lista gmin */
+.ka-pole-dzialki { display: flex; flex-direction: column; gap: 12px; }
+.ka-input-dzialka { min-height: 52px; font-size: 18px; letter-spacing: .02em; }
+.ka-gminy { display: grid; gap: 10px; }
+.ka-gmina { min-height: 56px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
+.ka-gmina-nazwa { font-size: 17px; }
+.ka-komunikat .ka-link { display: inline-flex; align-items: center; padding: 0 6px; vertical-align: middle; }
+
+/* Pinezka (L.divIcon z klasą ka-pinezka; kolor firmy przez currentColor) */
+.ka-pinezka { color: var(--ka-akcent); background: none; border: 0; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+
+/* Ekran działki */
+.ka-dzialka-opis { grid-column: 1 / -1; text-align: left; font-size: 17px; }
+
+/* Karta „To Twoja budowa?” */
+.ka-karta-budowy { display: grid; gap: 20px; }
+.ka-karta-glowna { display: flex; flex-direction: column; gap: 14px; background: #fff; border: 1px solid var(--ka-linia); border-radius: var(--ka-promien); padding: 20px; }
+.ka-karta-ikona { width: 72px; height: 72px; color: var(--ka-akcent); }
+.ka-karta-fakty { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ka-karta-fakty li { position: relative; padding-left: 26px; font-size: 16.5px; }
+.ka-karta-fakty li::before { content: ''; position: absolute; left: 4px; top: .5em; width: 10px; height: 10px; border-radius: 50%; background: var(--ka-akcent); }
+.ka-karta-fakty .ka-karta-cytat { color: var(--ka-tekst-slaby); font-size: 14.5px; }
+.ka-karta-przyciski { display: flex; flex-direction: column; gap: 10px; }
+.ka-po-co { margin: 0; font-size: 14.5px; color: var(--ka-tekst-slaby); background: var(--ka-tlo-2); border-left: 3px solid var(--ka-akcent); padding: 14px 16px; border-radius: var(--ka-promien); }
+
+/* Układ szeroki (prop `szeroko`): na telefonie jak zwykle jedna kolumna, od 900 px mapa obok pytań */
+.ka-bok, .ka-bok-dol { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+@media (min-width: 900px) {
+  .ka-szeroki { display: grid; grid-template-columns: minmax(0, 3fr) minmax(340px, 2fr); grid-template-areas: "mapa bok" "mapa dol"; grid-template-rows: auto 1fr; column-gap: 32px; row-gap: 16px; align-items: start; }
+  .ka-szeroki > .ka-bok { grid-area: bok; }
+  .ka-szeroki > .ka-mapa-obszar { grid-area: mapa; position: sticky; top: 16px; }
+  .ka-szeroki > .ka-bok-dol { grid-area: dol; }
+  .ka-szeroki .ka-mapa { height: min(76vh, 680px); min-height: 480px; }
+  .ka-szeroki .ka-nawigacja { position: static; border-top: 0; padding-top: 0; }
+  .ka-szeroki .ka-nawigacja-mapa { flex-direction: column; }
+  .ka-szeroki .ka-nawigacja-mapa .ka-btn { width: 100%; }
+  .ka-karta-budowy { grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); column-gap: 32px; align-items: start; }
+  .ka-karta-ikona { width: 96px; height: 96px; }
+  .ka-karta-przyciski { flex-direction: row; }
+  .ka-karta-przyciski .ka-btn { width: auto; flex: 1 1 0; }
+}

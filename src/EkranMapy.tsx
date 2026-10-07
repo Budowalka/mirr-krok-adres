@@ -4,7 +4,10 @@ import type { Api } from './api';
 import { obwodM, rzutM2, zGeoJson } from './geometria';
 import type { AdapterMapy } from './mapa/adapter';
 import { opisKondygnacji, wstaw } from './teksty';
-import type { Adres, LiniaPanelu, OdpowiedzBudynek, Teksty, WynikKrokuAdresu } from './typy';
+import { opisDzialki, scalDzialke } from './dzialka';
+import { usePozwolenie } from './pozwolenie';
+import { PUSTA, zlozWynik } from './wynik';
+import type { Adres, DodatkiKroku, DzialkaZListy, LiniaPanelu, OdpowiedzBudynek, Teksty, WynikKrokuAdresu, ZrodloPunktu } from './typy';
 
 type Props = {
   api: Api;
@@ -16,56 +19,26 @@ type Props = {
   adapterRef: RefObject<AdapterMapy | null>;
   /** false = bez mapy: dane zbieramy, ale nie prosimy o potwierdzenie obrysu (Grey House). */
   pokazMape: boolean;
-  onGotowe: (wynik: WynikKrokuAdresu) => void;
+  onGotowe: (wynik: WynikKrokuAdresu, dodatki?: DodatkiKroku) => void;
+  /** Od v0.3.0: skąd punkt (adres / pinezka / numer działki). Dla pinezki i numeru budynek pytany bez adresu. */
+  zrodloPunktu?: ZrodloPunktu;
+  /** Od v0.3.0: działka wybrana z listy po numerze; wygrywa z działką z ULDK po punkcie. */
+  wybrana?: DzialkaZListy | null;
+  /** Od v0.3.0: po „dalej” czekaj na pozwolenie i oddaj je w drugim argumencie onGotowe. */
+  sprawdzPozwolenie?: boolean;
   onPomin: (powod?: string) => void;
   onWstecz: () => void;
 };
 
 type Stan = 'laduje' | 'ewidencja' | 'brak' | 'rysowanie' | 'narysowane';
 
-const PUSTA: OdpowiedzBudynek = {
-  obrys: null, zrodlo_obrysu: 'brak', obwod_m: null, rzut_m2: null, kondygnacje: null, zrodlo_kondygnacji: null,
-  identyfikator_egib: null, identyfikator_uldk: null, budynek: null, dzialka: null, inne_budynki_na_dzialce: [],
-  powiat: { teryt: null, w_bazie: false }, teryt: null,
-};
-
-export function zlozWynik(
-  adres: Adres,
-  dane: OdpowiedzBudynek,
-  wybor: { obrys: Polygon | null; zrodlo_obrysu: WynikKrokuAdresu['zrodlo_obrysu']; kondygnacje: number | null; zrodlo_kondygnacji: WynikKrokuAdresu['zrodlo_kondygnacji'] }
-): WynikKrokuAdresu {
-  const reczne = wybor.zrodlo_obrysu === 'reczne';
-  const ring = wybor.obrys ? zGeoJson(wybor.obrys) : [];
-  return {
-    adres: {
-      ...adres,
-      gmina: dane.dzialka?.gmina ?? null,
-      powiat: dane.dzialka?.powiat ?? null,
-      wojewodztwo: dane.dzialka?.wojewodztwo ?? null,
-      teryt_gmina: dane.teryt?.teryt_gmina ?? null,
-      simc: dane.teryt?.simc ?? null,
-      ulic: dane.teryt?.ulic ?? null,
-      kod: adres.kod ?? dane.teryt?.kod ?? null,
-    },
-    obrys: wybor.obrys,
-    zrodlo_obrysu: wybor.zrodlo_obrysu,
-    obwod_m: wybor.obrys ? Math.round(obwodM(ring) * 10) / 10 : null,
-    rzut_m2: wybor.obrys ? Math.round(rzutM2(ring) * 10) / 10 : null,
-    kondygnacje: wybor.kondygnacje,
-    zrodlo_kondygnacji: wybor.kondygnacje === null ? null : wybor.zrodlo_kondygnacji,
-    identyfikator_egib: reczne ? null : dane.identyfikator_egib,
-    budynek: reczne ? null : dane.budynek,
-    dzialka: dane.dzialka,
-    inne_budynki_na_dzialce: reczne ? [] : dane.inne_budynki_na_dzialce,
-    powiat: dane.powiat,
-  };
-}
+export { zlozWynik } from './wynik';
 
 /**
  * Część „po wyborze adresu”: pobiera dane budynku, kładzie obrys na mapę rodzica,
  * pokazuje panel (obwód, rzut, kondygnacje z „Popraw”), rysowanie po rogach i przyciski.
  */
-export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, onGotowe, onPomin, onWstecz }: Props) {
+export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, onGotowe, onPomin, onWstecz, zrodloPunktu = 'adres', wybrana = null, sprawdzPozwolenie = false }: Props) {
   const [stan, setStan] = useState<Stan>('laduje');
   const [dane, setDane] = useState<OdpowiedzBudynek>(PUSTA);
   const [obrys, setObrys] = useState<Polygon | null>(null);
@@ -73,14 +46,28 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
   const [kondygnacje, setKondygnacje] = useState<number | null>(null);
   const [zrodloKondygnacji, setZrodloKondygnacji] = useState<WynikKrokuAdresu['zrodlo_kondygnacji']>(null);
   const [poprawiam, setPoprawiam] = useState(false);
+  const [czekam, setCzekam] = useState(false);
+  // Znacznik trwającego czekania na pozwolenie; każde wycofanie go unieważnia, więc spóźniony wynik nie jest oddawany.
+  const oczekiwanie = useRef(0);
+
+  function anulujOczekiwanie() {
+    oczekiwanie.current += 1;
+    setCzekam(false);
+  }
 
   useEffect(() => {
     let aktywny = true;
     setStan('laduje');
-    api
-      .budynek(adres.lat, adres.lon, { miasto: adres.miasto, ulica: adres.ulica, numer: adres.numer })
-      .then((d) => {
+    setCzekam(false);
+    // Pinezka i numer działki nie mają adresu: budynek pytany samym punktem (bez trzeciego argumentu, pułapka 4).
+    const zapytanie =
+      zrodloPunktu === 'adres'
+        ? api.budynek(adres.lat, adres.lon, { miasto: adres.miasto, ulica: adres.ulica, numer: adres.numer })
+        : api.budynek(adres.lat, adres.lon);
+    zapytanie
+      .then((odp) => {
         if (!aktywny) return;
+        const d: OdpowiedzBudynek = { ...odp, dzialka: scalDzialke(odp.dzialka, wybrana) };
         setDane(d);
         setKondygnacje(d.kondygnacje);
         setZrodloKondygnacji(d.kondygnacje === null ? null : 'ewidencja');
@@ -95,22 +82,35 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
         }
       })
       .catch(() => {
-        if (aktywny) setStan('brak');
+        if (!aktywny) return;
+        // Wybrana z listy działka zostaje, nawet gdy ewidencja budynków nie odpowiada.
+        if (wybrana) {
+          const d = { ...PUSTA, dzialka: scalDzialke(null, wybrana) };
+          setDane(d);
+          adapterRef.current?.pokazObrys(null, d.dzialka?.obrys ?? null);
+        }
+        setStan('brak');
       });
     return () => {
       aktywny = false;
+      oczekiwanie.current += 1;
       adapterRef.current?.przerwijRysowanie();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adres.lat, adres.lon]);
+
+  const czekajNaPozwolenie = usePozwolenie(api, dane.dzialka?.identyfikator ?? null, sprawdzPozwolenie && stan !== 'laduje');
 
   const ring = useMemo(() => (obrys ? zGeoJson(obrys) : []), [obrys]);
   const obwod = obrys ? Math.round(obwodM(ring) * 10) / 10 : null;
   const rzut = obrys ? Math.round(rzutM2(ring) * 10) / 10 : null;
   const liniaDodatkowa = linia ? linia({ obwod_m: obwod, rzut_m2: rzut, kondygnacje }) : null;
   const pytamOKondygnacje = kondygnacje === null || poprawiam;
+  // Pinezka i numer działki: w podpowiedzi opis działki zamiast współrzędnych (klient nie zna „Punkt na mapie 52.18…”).
+  const miejsceWPodpowiedzi = zrodloPunktu !== 'adres' && dane.dzialka ? opisDzialki(dane.dzialka) : adres.tekst;
 
   function zacznijRysowac() {
+    anulujOczekiwanie();
     setPoprawiam(false);
     setObrys(null);
     setStan('rysowanie');
@@ -138,14 +138,44 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
     }
   }
 
+  // Zmiana kondygnacji w trakcie czekania na pozwolenie unieważnia wynik złożony ze starą liczbą.
   function ustawKondygnacje(n: number) {
+    anulujOczekiwanie();
     setKondygnacje(n);
     setZrodloKondygnacji('reczne');
     setPoprawiam(false);
   }
 
   function gotowe() {
-    onGotowe(zlozWynik(adres, dane, { obrys, zrodlo_obrysu: obrys ? zrodloObrysu : 'brak', kondygnacje, zrodlo_kondygnacji: zrodloKondygnacji }));
+    const wynik = zlozWynik(
+      adres,
+      dane,
+      { obrys, zrodlo_obrysu: obrys ? zrodloObrysu : 'brak', kondygnacje, zrodlo_kondygnacji: zrodloKondygnacji },
+      { zrodlo_punktu: zrodloPunktu, punkt: { lat: adres.lat, lon: adres.lon } }
+    );
+    // Bez sprawdzania pozwolenia: synchronicznie i jednym argumentem, jak v0.2 (pułapka 2).
+    if (!sprawdzPozwolenie) {
+      onGotowe(wynik);
+      return;
+    }
+    const moje = ++oczekiwanie.current;
+    setCzekam(true);
+    void czekajNaPozwolenie().then((pozwolenie) => {
+      if (oczekiwanie.current !== moje) return;
+      onGotowe(wynik, { pozwolenie });
+      // Gdy strona zostawia krok na ekranie, przycisk nie może utknąć na „Chwileczkę…”.
+      setCzekam(false);
+    });
+  }
+
+  function poprawKondygnacje() {
+    anulujOczekiwanie();
+    setPoprawiam(true);
+  }
+
+  function wstecz() {
+    anulujOczekiwanie();
+    onWstecz();
   }
 
   // Tryb bez mapy (Grey House): dane zebrane, pytamy tylko o kondygnacje, gdy ewidencja ich nie zna.
@@ -179,7 +209,7 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
           <>
             {wyborKondygnacji}
             <div className="ka-nawigacja">
-              <button type="button" className="ka-wstecz" onClick={onWstecz}>← {teksty.wstecz}</button>
+              <button type="button" className="ka-wstecz" onClick={wstecz}>← {teksty.wstecz}</button>
             </div>
           </>
         ) : null}
@@ -189,7 +219,7 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
 
   return (
     <div className="ka-ekran-mapa">
-      {stan === 'ewidencja' && <p className="ka-podpowiedz">{wstaw(teksty.obrysZEwidencji, { adres: adres.tekst })}</p>}
+      {stan === 'ewidencja' && <p className="ka-podpowiedz">{wstaw(teksty.obrysZEwidencji, { adres: miejsceWPodpowiedzi })}</p>}
       {stan === 'laduje' && <p className="ka-podpowiedz" aria-live="polite">{teksty.szukamy}</p>}
       {stan === 'brak' && <p className="ka-podpowiedz">{teksty.brakObrysu}</p>}
       {stan === 'rysowanie' && <p className="ka-podpowiedz">{teksty.rysowanie}</p>}
@@ -210,7 +240,7 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
             <div className="ka-panel-wiersz">
               <span className="ka-panel-etykieta">{teksty.kondygnacje}</span>
               <span className="ka-panel-wartosc">{kondygnacje}, {opisKondygnacji(kondygnacje)}</span>
-              <button type="button" className="ka-link ka-popraw" onClick={() => setPoprawiam(true)}>{teksty.popraw}</button>
+              <button type="button" className="ka-link ka-popraw" onClick={poprawKondygnacje}>{teksty.popraw}</button>
             </div>
           )}
           {pytamOKondygnacje && wyborKondygnacji}
@@ -227,7 +257,7 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
       <div className="ka-nawigacja ka-nawigacja-mapa">
         {stan === 'ewidencja' && (
           <>
-            <button type="button" className="ka-btn ka-btn-glowny" disabled={kondygnacje === null} onClick={gotowe}>{teksty.zgadzaSie}</button>
+            <button type="button" className="ka-btn ka-btn-glowny" disabled={kondygnacje === null || czekam} onClick={gotowe}>{czekam ? teksty.sprawdzamy : teksty.zgadzaSie}</button>
             <button type="button" className="ka-btn ka-btn-drugi" onClick={zacznijRysowac}>{teksty.zaznaczeSam}</button>
           </>
         )}
@@ -242,11 +272,11 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
         )}
         {stan === 'narysowane' && (
           <>
-            <button type="button" className="ka-btn ka-btn-glowny" disabled={kondygnacje === null} onClick={gotowe}>{teksty.dalej}</button>
+            <button type="button" className="ka-btn ka-btn-glowny" disabled={kondygnacje === null || czekam} onClick={gotowe}>{czekam ? teksty.sprawdzamy : teksty.dalej}</button>
             <button type="button" className="ka-btn ka-btn-drugi" onClick={zacznijRysowac}>{teksty.zaznaczeSam}</button>
           </>
         )}
-        <button type="button" className="ka-wstecz" onClick={onWstecz}>← {teksty.wstecz}</button>
+        <button type="button" className="ka-wstecz" onClick={wstecz}>← {teksty.wstecz}</button>
       </div>
       {stan === 'ewidencja' && <p className="ka-stopka">{teksty.notaMapa}</p>}
     </div>

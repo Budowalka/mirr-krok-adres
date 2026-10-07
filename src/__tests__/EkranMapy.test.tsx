@@ -1,9 +1,12 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Api } from '../api';
 import { EkranMapy } from '../EkranMapy';
 import { FalszywyAdapterMapy } from '../mapa/falszywy';
 import { DOMYSLNE_TEKSTY } from '../teksty';
+import { adresZPunktu } from '../dzialka';
+import type { DzialkaZListy, Pozwolenie } from '../typy';
 import type { Adres, OdpowiedzBudynek } from '../typy';
 
 const OBRYS_198 = {
@@ -159,5 +162,171 @@ describe('EkranMapy', () => {
     fireEvent.click(screen.getByText('Dwa piętra lub więcej'));
     await waitFor(() => expect(b.onGotowe).toHaveBeenCalled());
     expect(b.onGotowe.mock.calls[0][0]).toMatchObject({ kondygnacje: 3, zrodlo_kondygnacji: 'reczne' });
+  });
+});
+
+describe('EkranMapy: v0.3.0 (źródło punktu, wybrana działka, pozwolenie)', () => {
+  const P: Pozwolenie = { numer_gunb: 'TEST-0002', data_decyzji: '2024-03-04', rodzaj: 'budowa nowego', nazwa_zamierzenia: 'BUDOWA BUDYNKU MIESZKALNEGO JEDNORODZINNEGO', kubatura: 960, units: 1 };
+  const WYBRANA: DzialkaZListy = { identyfikator: '142801_1.0001.199', gmina: 'Sochaczew (miasto)', obreb: 'Chodaków', numer: '199', punkt: { lat: ADRES.lat, lon: ADRES.lon }, obrys: PROSTOKAT };
+
+  function renderujV3(odpowiedz: OdpowiedzBudynek | Error, props: Partial<Parameters<typeof EkranMapy>[0]> = {}) {
+    const adapter = new FalszywyAdapterMapy();
+    adapter.zamontowany = true;
+    const api = {
+      podpowiedzi: vi.fn(),
+      budynek: vi.fn(async () => { if (odpowiedz instanceof Error) throw odpowiedz; return odpowiedz; }),
+      dzialka: vi.fn(),
+      pozwolenie: vi.fn(async () => P),
+    } as unknown as Api & { budynek: ReturnType<typeof vi.fn>; pozwolenie: ReturnType<typeof vi.fn> };
+    const onGotowe = vi.fn();
+    render(<EkranMapy api={api} adres={ADRES} teksty={DOMYSLNE_TEKSTY} wysokoscKondygnacji={3} adapterRef={{ current: adapter }} pokazMape onGotowe={onGotowe} onPomin={vi.fn()} onWstecz={vi.fn()} {...props} />);
+    return { adapter, api, onGotowe };
+  }
+
+  it('domyślnie: bez pytania o pozwolenie, onGotowe od razu jednym argumentem, zrodlo_punktu adres', async () => {
+    const { api, onGotowe } = renderujV3(EWIDENCJA);
+    await screen.findByText('Zgadza się, dalej');
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    expect(onGotowe.mock.calls[0]).toHaveLength(1);
+    expect(onGotowe.mock.calls[0][0]).toMatchObject({ zrodlo_punktu: 'adres', punkt: { lat: ADRES.lat, lon: ADRES.lon } });
+    expect(api.pozwolenie).not.toHaveBeenCalled();
+  });
+
+  it('pinezka: budynek pytany samym punktem, wynik ze źródłem pinezka i opisem działki', async () => {
+    const pinezka = adresZPunktu({ lat: ADRES.lat, lon: ADRES.lon }, null);
+    const { api, onGotowe } = renderujV3(EWIDENCJA, { adres: pinezka, zrodloPunktu: 'pinezka' });
+    await screen.findByText('Zgadza się, dalej');
+    expect(api.budynek.mock.calls[0]).toEqual([52.2705286, 20.2888357]);
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    const w = onGotowe.mock.calls[0][0];
+    expect(w.zrodlo_punktu).toBe('pinezka');
+    expect(w.adres.tekst).toBe('Działka 198/2, obręb Chodaków, Sochaczew (miasto)');
+  });
+
+  it('sprawdzPozwolenie: po „Zgadza się” czeka na rejestr i oddaje { pozwolenie } w drugim argumencie', async () => {
+    const { api, onGotowe } = renderujV3(EWIDENCJA, { sprawdzPozwolenie: true });
+    await screen.findByText('Zgadza się, dalej');
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    await waitFor(() => expect(onGotowe).toHaveBeenCalledTimes(1));
+    expect(onGotowe.mock.calls[0][1]).toEqual({ pozwolenie: P });
+    expect(api.pozwolenie).toHaveBeenCalledWith('142801_1.0001.198/2');
+  });
+
+  it('wybrana z listy działka wygrywa z inną działką z ewidencji (mapa i wynik)', async () => {
+    const { adapter, onGotowe } = renderujV3(EWIDENCJA, { wybrana: WYBRANA, zrodloPunktu: 'numer_dzialki' });
+    await screen.findByText('Zgadza się, dalej');
+    expect(adapter.dzialka).toEqual(PROSTOKAT);
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    expect(onGotowe.mock.calls[0][0].dzialka.identyfikator).toBe('142801_1.0001.199');
+    expect(onGotowe.mock.calls[0][0].zrodlo_punktu).toBe('numer_dzialki');
+  });
+
+  it('awaria ewidencji przy wybranej działce: działka z listy zostaje na mapie i w wyniku', async () => {
+    const { adapter, onGotowe } = renderujV3(new Error('502'), { wybrana: WYBRANA, zrodloPunktu: 'numer_dzialki' });
+    await screen.findByText('Zaznacz dom na mapie');
+    expect(adapter.dzialka).toEqual(PROSTOKAT);
+    fireEvent.click(screen.getByText('Zaznacz dom na mapie'));
+    act(() => adapter.zakonczRysowanie(PROSTOKAT));
+    fireEvent.click(screen.getByText('Parter'));
+    fireEvent.click(screen.getByText('Dalej'));
+    expect(onGotowe.mock.calls[0][0].dzialka.identyfikator).toBe('142801_1.0001.199');
+  });
+
+  function zWolnymPozwoleniem(props: Partial<Parameters<typeof EkranMapy>[0]> = {}) {
+    const r = renderujV3(EWIDENCJA, { sprawdzPozwolenie: true, ...props });
+    let rozwiaz: (p: Pozwolenie | null) => void = () => {};
+    r.api.pozwolenie.mockImplementation(() => new Promise<Pozwolenie | null>((res) => { rozwiaz = res; }));
+    return { ...r, rozwiaz: async () => { await act(async () => { rozwiaz(P); }); } };
+  }
+
+  it('Wstecz w trakcie czekania na pozwolenie: spóźniony wynik nie jest oddawany', async () => {
+    const onWstecz = vi.fn();
+    const { onGotowe, rozwiaz } = zWolnymPozwoleniem({ onWstecz });
+    await screen.findByText('Zgadza się, dalej');
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    const przycisk = screen.getByText(DOMYSLNE_TEKSTY.sprawdzamy).closest('button');
+    expect((przycisk as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByText(/Wstecz/));
+    expect(onWstecz).toHaveBeenCalled();
+    await rozwiaz();
+    expect(onGotowe).not.toHaveBeenCalled();
+  });
+
+  it('odmontowanie w trakcie czekania na pozwolenie: wynik nie jest oddawany', async () => {
+    const { onGotowe, rozwiaz } = zWolnymPozwoleniem();
+    await screen.findByText('Zgadza się, dalej');
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    cleanup();
+    await rozwiaz();
+    expect(onGotowe).not.toHaveBeenCalled();
+  });
+
+  it('„Zaznacz sam” w trakcie czekania: wynik nie jest oddawany, przycisk wraca do normy', async () => {
+    const { adapter, onGotowe, rozwiaz } = zWolnymPozwoleniem();
+    await screen.findByText('Zgadza się, dalej');
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).not.toBeNull();
+    fireEvent.click(screen.getByText(DOMYSLNE_TEKSTY.zaznaczeSam));
+    await rozwiaz();
+    expect(onGotowe).not.toHaveBeenCalled();
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).toBeNull();
+    act(() => adapter.zakonczRysowanie(PROSTOKAT));
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.dalej)).not.toBeNull();
+  });
+
+  it('„Popraw” i zmiana kondygnacji w trakcie czekania: stary wynik nie jest oddawany, nowy ma nowe kondygnacje', async () => {
+    const { onGotowe, rozwiaz } = zWolnymPozwoleniem();
+    await screen.findByText('Zgadza się, dalej');
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).not.toBeNull();
+    fireEvent.click(screen.getByText('Popraw'));
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).toBeNull();
+    fireEvent.click(screen.getByText('Parter i piętro'));
+    await rozwiaz();
+    expect(onGotowe).not.toHaveBeenCalled();
+    const przycisk = screen.getByText('Zgadza się, dalej').closest('button') as HTMLButtonElement;
+    expect(przycisk.disabled).toBe(false);
+    fireEvent.click(przycisk);
+    await waitFor(() => expect(onGotowe).toHaveBeenCalledTimes(1));
+    expect(onGotowe.mock.calls[0][0]).toMatchObject({ kondygnacje: 2, zrodlo_kondygnacji: 'reczne' });
+    expect(onGotowe.mock.calls[0][1]).toEqual({ pozwolenie: P });
+  });
+
+  it('wybór kondygnacji w trakcie czekania (opcje otwarte przed „dalej”): stary wynik nie jest oddawany', async () => {
+    const { onGotowe, rozwiaz } = zWolnymPozwoleniem();
+    await screen.findByText('Zgadza się, dalej');
+    fireEvent.click(screen.getByText('Popraw'));
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).not.toBeNull();
+    fireEvent.click(screen.getByText('Dwa piętra lub więcej'));
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).toBeNull();
+    await rozwiaz();
+    expect(onGotowe).not.toHaveBeenCalled();
+  });
+
+  it('po oddaniu wyniku z pozwoleniem przycisk wraca do normy (krok zostaje na ekranie)', async () => {
+    const { onGotowe, rozwiaz } = zWolnymPozwoleniem();
+    await screen.findByText('Zgadza się, dalej');
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    await rozwiaz();
+    await waitFor(() => expect(onGotowe).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).toBeNull();
+    expect((screen.getByText('Zgadza się, dalej').closest('button') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('pinezka i numer działki z obrysem z ewidencji: podpowiedź z opisem działki, nie ze współrzędnymi', async () => {
+    const pinezka = adresZPunktu({ lat: ADRES.lat, lon: ADRES.lon }, null);
+    renderujV3(EWIDENCJA, { adres: pinezka, zrodloPunktu: 'pinezka' });
+    expect(await screen.findByText('Działka 198/2, obręb Chodaków, Sochaczew (miasto). Obrys wzięliśmy z ewidencji budynków.')).toBeTruthy();
+    expect(screen.queryByText(/Punkt na mapie/)).toBeNull();
+    cleanup();
+
+    renderujV3(EWIDENCJA, { adres: adresZPunktu(WYBRANA.punkt, WYBRANA), wybrana: WYBRANA, zrodloPunktu: 'numer_dzialki' });
+    expect(await screen.findByText('Działka 199, obręb Chodaków, Sochaczew (miasto). Obrys wzięliśmy z ewidencji budynków.')).toBeTruthy();
+  });
+
+  it('źródło adres: podpowiedź przy obrysie z ewidencji dalej z tekstem adresu', async () => {
+    renderujV3(EWIDENCJA);
+    expect(await screen.findByText('Zwierzyniecka 5, Sochaczew. Obrys wzięliśmy z ewidencji budynków.')).toBeTruthy();
   });
 });
