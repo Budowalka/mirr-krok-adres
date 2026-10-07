@@ -31,7 +31,20 @@ describe('parsujNumerDzialki', () => {
     expect(parsujNumerDzialki(we)).toEqual(wy);
   });
 
-  it.each(['', '64/4', '10', 'abc', '10 64 5', '12345 1'])('„%s" → null (komunikat zamiast zapytania)', (we) => {
+  // Obręby wiejskie mają w ewidencji nazwę, nie numer (ULDK znajduje „Dobra 1006”, a „3 1006” trafia w inne województwa).
+  it.each([
+    ['Dobra 1006', { obreb: 'Dobra', numer: '1006' }],
+    ['1006 Dobra', { obreb: 'Dobra', numer: '1006' }],
+    ['Stare Czarnowo 12/3', { obreb: 'Stare Czarnowo', numer: '12/3' }],
+    ['dz. 1006 obręb Dobra', { obreb: 'Dobra', numer: '1006' }],
+    ['działka nr 12/3, obręb Dołuje', { obreb: 'Dołuje', numer: '12/3' }],
+    ['obr. Przecław, dz. nr 45/7', { obreb: 'Przecław', numer: '45/7' }],
+    ['Bielsko-Biała 7', { obreb: 'Bielsko-Biała', numer: '7' }],
+  ])('obręb z nazwą: „%s" → obręb i numer', (we, wy) => {
+    expect(parsujNumerDzialki(we)).toEqual(wy);
+  });
+
+  it.each(['', '64/4', '10', 'abc', '10 64 5', '12345 1', 'dz. nr 64/4', 'obręb 1006'])('„%s" → null (komunikat zamiast zapytania)', (we) => {
     expect(parsujNumerDzialki(we)).toBeNull();
   });
 });

@@ -6,7 +6,7 @@ type OpisDzialkiWe = { numer: string | null; obreb: string | null; gmina: string
 
 /**
  * „10 64/4", „0010 64/4", „obręb 10, dz. 64/4", „dz. nr 64/4, obręb 0010", „64/4 10" → { obreb, numer }.
- * Z tekstu bierzemy liczby (słowa, w tym nazwa gminy, są pomijane: ULDK ich nie przyjmuje, spec 6.1). Muszą być dokładnie dwie.
+ * Przy dwóch liczbach słowa (w tym nazwa gminy) są pomijane. Przy jednej liczbie reszta tekstu to nazwa obrębu (zNazwaObrebu).
  * Który to obręb: (1) liczba tuż po słowie zaczynającym się od „obr” (obręb, obr., obrębie), jak w pozwoleniu i wypisie;
  * (2) bez tego słowa: liczba bez ukośnika, gdy druga ma ukośnik (numer z ukośnikiem nigdy nie jest obrębem);
  * (3) w pozostałych przypadkach pierwsza liczba. Obręb: 1–4 cyfry; numer: cyfry z opcjonalną literą i częścią po ukośniku.
@@ -16,8 +16,23 @@ const SLOWO_OBREB = /(?<!\p{L})obr/iu;
 const OBREB = /^\d{1,4}$/;
 const NUMER = /^\d{1,6}[a-z]?(?:\/\d{1,4}[a-z]?)?$/i;
 
+// Słowa pomocnicze z wypisu i pozwolenia, które nie są nazwą obrębu.
+const SLOWA_POMOCNICZE = /(?<!\p{L})(?:obr\p{L}*|dz\p{L}*|nr|numer|ewid\p{L}*)\.?(?!\p{L})/giu;
+const NAZWA_OBREBU = /^\p{L}[\p{L} -]{0,39}$/u;
+
+/**
+ * Obręb wiejski ma w ewidencji nazwę („Dobra”, „Stare Czarnowo”), a nie numer. Przy jednej liczbie (numer działki)
+ * reszta tekstu bez słów pomocniczych to nazwa obrębu: „Dobra 1006”, „dz. 12/3, obręb Dołuje”. ULDK szuka po „nazwa numer”.
+ */
+function zNazwaObrebu(tekst: string, numer: { wartosc: string; pozycja: number }): { obreb: string; numer: string } | null {
+  const bezNumeru = tekst.slice(0, numer.pozycja) + ' ' + tekst.slice(numer.pozycja + numer.wartosc.length);
+  const nazwa = bezNumeru.replace(SLOWA_POMOCNICZE, ' ').replace(/[,.;:]/g, ' ').replace(/\s+/g, ' ').trim();
+  return NAZWA_OBREBU.test(nazwa) && NUMER.test(numer.wartosc) ? { obreb: nazwa, numer: numer.wartosc } : null;
+}
+
 export function parsujNumerDzialki(tekst: string): { obreb: string; numer: string } | null {
   const liczby = [...tekst.matchAll(LICZBA)].map((m) => ({ wartosc: m[0], pozycja: m.index ?? 0 }));
+  if (liczby.length === 1) return zNazwaObrebu(tekst, liczby[0]);
   if (liczby.length !== 2) return null;
   const [a, b] = liczby;
 

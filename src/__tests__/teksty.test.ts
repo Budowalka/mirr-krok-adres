@@ -32,7 +32,7 @@ describe('teksty domyślne v0.3.0', () => {
   it('nowe teksty mają brzmienie z planu', () => {
     expect(DOMYSLNE_TEKSTY.wejsciePinezka).toBe('Zaznacz na mapie');
     expect(DOMYSLNE_TEKSTY.naglowekPinezka).toBe('Zaznacz swoją działkę');
-    expect(DOMYSLNE_TEKSTY.przykladDzialki).toBe('np. 10 64/4');
+    expect(DOMYSLNE_TEKSTY.przykladDzialki).toBe('np. Dobra 1006');
     expect(DOMYSLNE_TEKSTY.naglowekPotwierdzDzialke).toBe('To Twoja działka?');
     expect(DOMYSLNE_TEKSTY_KARTY.naglowek).toBe('To Twoja budowa?');
     expect(DOMYSLNE_TEKSTY_KARTY.tak).toBe('Tak, to moja budowa');

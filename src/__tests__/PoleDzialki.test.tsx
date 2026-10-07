@@ -20,7 +20,7 @@ function api(dzialka: (obreb: string, numer: string) => Promise<DzialkaZListy[]>
 function renderuj(a: ApiTestowe, onPinezka?: () => void) {
   const onWybrano = vi.fn();
   const r = render(<PoleDzialki api={a} teksty={DOMYSLNE_TEKSTY} onWybrano={onWybrano} onPinezka={onPinezka} />);
-  return { ...r, onWybrano, pole: screen.getByPlaceholderText('np. 10 64/4') as HTMLInputElement };
+  return { ...r, onWybrano, pole: screen.getByPlaceholderText('np. Dobra 1006') as HTMLInputElement };
 }
 const wpisz = (pole: HTMLInputElement, tekst: string) => fireEvent.change(pole, { target: { value: tekst } });
 const enter = (pole: HTMLInputElement) => fireEvent.keyDown(pole, { key: 'Enter' });

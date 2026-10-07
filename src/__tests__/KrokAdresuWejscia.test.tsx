@@ -83,7 +83,7 @@ describe('KrokAdresu v0.3.0: wejścia, cel i pozwolenie', () => {
     render(<KrokAdresu api="/api/geo" wejscia={['adres', 'numer_dzialki']} cel="dzialka" onGotowe={onGotowe} onPomin={vi.fn()} adapterMapy={() => adapter} />);
     fireEvent.click(screen.getByRole('tab', { name: 'Numer działki' }));
     expect(screen.getByRole('heading', { name: 'Podaj numer działki' })).toBeTruthy();
-    const pole = screen.getByPlaceholderText('np. 10 64/4');
+    const pole = screen.getByPlaceholderText('np. Dobra 1006');
     fireEvent.change(pole, { target: { value: '10 64/4' } });
     fireEvent.keyDown(pole, { key: 'Enter' });
     await screen.findByText('W której gminie jest ta działka?');
