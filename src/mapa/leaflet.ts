@@ -33,6 +33,8 @@ export function utworzAdapterLeaflet(): AdapterMapy {
   // Tryb pinezki: callback może przyjść przed załadowaniem Leafleta (zamontuj jest asynchroniczne).
   let onPunkt: ((punkt: Punkt) => void) | null = null;
   let pinezka: Leaflet.Marker | null = null;
+  // StrictMode (dev): cleanup potrafi przyjść, zanim async zamontuj skończy importy; wtedy nie wolno tworzyć mapy.
+  let zniszczony = false;
 
   function narysuj(obrys: Polygon | null, dzialka: Polygon | null) {
     if (!L || !mapa) return;
@@ -71,9 +73,11 @@ export function utworzAdapterLeaflet(): AdapterMapy {
       // załadowany i wystawiony PRZED importem Geomana — równoległy import kończył się
       // „ReferenceError: L is not defined" (demo, 13.09).
       const leaflet = await import('leaflet');
+      if (zniszczony) return;
       L = (leaflet.default ?? leaflet) as typeof Leaflet;
       (window as unknown as { L: typeof Leaflet }).L = L;
       await import('@geoman-io/leaflet-geoman-free');
+      if (zniszczony) return;
       mapa = L.map(el, { zoomControl: false, attributionControl: true, tap: true } as Leaflet.MapOptions).setView([centrum.lat, centrum.lon], zoom ?? 19);
       L.control.zoom({ position: 'bottomright' }).addTo(mapa);
       kafle(L, zrodloKafli).addTo(mapa);
@@ -167,6 +171,7 @@ export function utworzAdapterLeaflet(): AdapterMapy {
       warstwaObrysu?.eachLayer((w) => (w as unknown as { pm?: { disable(): void } }).pm?.disable());
     },
     zniszcz() {
+      zniszczony = true;
       onPunkt = null;
       pinezka = null;
       mapa?.remove();
