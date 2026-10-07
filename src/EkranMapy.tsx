@@ -136,7 +136,9 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
     }
   }
 
+  // Zmiana kondygnacji w trakcie czekania na pozwolenie unieważnia wynik złożony ze starą liczbą.
   function ustawKondygnacje(n: number) {
+    anulujOczekiwanie();
     setKondygnacje(n);
     setZrodloKondygnacji('reczne');
     setPoprawiam(false);
@@ -159,6 +161,11 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
     void czekajNaPozwolenie().then((pozwolenie) => {
       if (oczekiwanie.current === moje) onGotowe(wynik, { pozwolenie });
     });
+  }
+
+  function poprawKondygnacje() {
+    anulujOczekiwanie();
+    setPoprawiam(true);
   }
 
   function wstecz() {
@@ -228,7 +235,7 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
             <div className="ka-panel-wiersz">
               <span className="ka-panel-etykieta">{teksty.kondygnacje}</span>
               <span className="ka-panel-wartosc">{kondygnacje}, {opisKondygnacji(kondygnacje)}</span>
-              <button type="button" className="ka-link ka-popraw" onClick={() => setPoprawiam(true)}>{teksty.popraw}</button>
+              <button type="button" className="ka-link ka-popraw" onClick={poprawKondygnacje}>{teksty.popraw}</button>
             </div>
           )}
           {pytamOKondygnacje && wyborKondygnacji}

@@ -273,4 +273,34 @@ describe('EkranMapy: v0.3.0 (źródło punktu, wybrana działka, pozwolenie)', (
     act(() => adapter.zakonczRysowanie(PROSTOKAT));
     expect(screen.queryByText(DOMYSLNE_TEKSTY.dalej)).not.toBeNull();
   });
+
+  it('„Popraw” i zmiana kondygnacji w trakcie czekania: stary wynik nie jest oddawany, nowy ma nowe kondygnacje', async () => {
+    const { onGotowe, rozwiaz } = zWolnymPozwoleniem();
+    await screen.findByText('Zgadza się, dalej');
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).not.toBeNull();
+    fireEvent.click(screen.getByText('Popraw'));
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).toBeNull();
+    fireEvent.click(screen.getByText('Parter i piętro'));
+    await rozwiaz();
+    expect(onGotowe).not.toHaveBeenCalled();
+    const przycisk = screen.getByText('Zgadza się, dalej').closest('button') as HTMLButtonElement;
+    expect(przycisk.disabled).toBe(false);
+    fireEvent.click(przycisk);
+    await waitFor(() => expect(onGotowe).toHaveBeenCalledTimes(1));
+    expect(onGotowe.mock.calls[0][0]).toMatchObject({ kondygnacje: 2, zrodlo_kondygnacji: 'reczne' });
+    expect(onGotowe.mock.calls[0][1]).toEqual({ pozwolenie: P });
+  });
+
+  it('wybór kondygnacji w trakcie czekania (opcje otwarte przed „dalej”): stary wynik nie jest oddawany', async () => {
+    const { onGotowe, rozwiaz } = zWolnymPozwoleniem();
+    await screen.findByText('Zgadza się, dalej');
+    fireEvent.click(screen.getByText('Popraw'));
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).not.toBeNull();
+    fireEvent.click(screen.getByText('Dwa piętra lub więcej'));
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).toBeNull();
+    await rozwiaz();
+    expect(onGotowe).not.toHaveBeenCalled();
+  });
 });
