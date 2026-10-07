@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Api } from '../api';
 import { EkranMapy } from '../EkranMapy';
@@ -229,5 +230,47 @@ describe('EkranMapy: v0.3.0 (źródło punktu, wybrana działka, pozwolenie)', (
     fireEvent.click(screen.getByText('Parter'));
     fireEvent.click(screen.getByText('Dalej'));
     expect(onGotowe.mock.calls[0][0].dzialka.identyfikator).toBe('142801_1.0001.199');
+  });
+
+  function zWolnymPozwoleniem(props: Partial<Parameters<typeof EkranMapy>[0]> = {}) {
+    const r = renderujV3(EWIDENCJA, { sprawdzPozwolenie: true, ...props });
+    let rozwiaz: (p: Pozwolenie | null) => void = () => {};
+    r.api.pozwolenie.mockImplementation(() => new Promise<Pozwolenie | null>((res) => { rozwiaz = res; }));
+    return { ...r, rozwiaz: async () => { await act(async () => { rozwiaz(P); }); } };
+  }
+
+  it('Wstecz w trakcie czekania na pozwolenie: spóźniony wynik nie jest oddawany', async () => {
+    const onWstecz = vi.fn();
+    const { onGotowe, rozwiaz } = zWolnymPozwoleniem({ onWstecz });
+    await screen.findByText('Zgadza się, dalej');
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    const przycisk = screen.getByText(DOMYSLNE_TEKSTY.sprawdzamy).closest('button');
+    expect((przycisk as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByText(/Wstecz/));
+    expect(onWstecz).toHaveBeenCalled();
+    await rozwiaz();
+    expect(onGotowe).not.toHaveBeenCalled();
+  });
+
+  it('odmontowanie w trakcie czekania na pozwolenie: wynik nie jest oddawany', async () => {
+    const { onGotowe, rozwiaz } = zWolnymPozwoleniem();
+    await screen.findByText('Zgadza się, dalej');
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    cleanup();
+    await rozwiaz();
+    expect(onGotowe).not.toHaveBeenCalled();
+  });
+
+  it('„Zaznacz sam” w trakcie czekania: wynik nie jest oddawany, przycisk wraca do normy', async () => {
+    const { adapter, onGotowe, rozwiaz } = zWolnymPozwoleniem();
+    await screen.findByText('Zgadza się, dalej');
+    fireEvent.click(screen.getByText('Zgadza się, dalej'));
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).not.toBeNull();
+    fireEvent.click(screen.getByText(DOMYSLNE_TEKSTY.zaznaczeSam));
+    await rozwiaz();
+    expect(onGotowe).not.toHaveBeenCalled();
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).toBeNull();
+    act(() => adapter.zakonczRysowanie(PROSTOKAT));
+    expect(screen.queryByText(DOMYSLNE_TEKSTY.dalej)).not.toBeNull();
   });
 });

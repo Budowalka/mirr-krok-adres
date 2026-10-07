@@ -47,10 +47,18 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
   const [zrodloKondygnacji, setZrodloKondygnacji] = useState<WynikKrokuAdresu['zrodlo_kondygnacji']>(null);
   const [poprawiam, setPoprawiam] = useState(false);
   const [czekam, setCzekam] = useState(false);
+  // Znacznik trwającego czekania na pozwolenie; każde wycofanie go unieważnia, więc spóźniony wynik nie jest oddawany.
+  const oczekiwanie = useRef(0);
+
+  function anulujOczekiwanie() {
+    oczekiwanie.current += 1;
+    setCzekam(false);
+  }
 
   useEffect(() => {
     let aktywny = true;
     setStan('laduje');
+    setCzekam(false);
     // Pinezka i numer działki nie mają adresu: budynek pytany samym punktem (bez trzeciego argumentu, pułapka 4).
     const zapytanie =
       zrodloPunktu === 'adres'
@@ -85,6 +93,7 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
       });
     return () => {
       aktywny = false;
+      oczekiwanie.current += 1;
       adapterRef.current?.przerwijRysowanie();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -99,6 +108,7 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
   const pytamOKondygnacje = kondygnacje === null || poprawiam;
 
   function zacznijRysowac() {
+    anulujOczekiwanie();
     setPoprawiam(false);
     setObrys(null);
     setStan('rysowanie');
@@ -144,8 +154,16 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
       onGotowe(wynik);
       return;
     }
+    const moje = ++oczekiwanie.current;
     setCzekam(true);
-    void czekajNaPozwolenie().then((pozwolenie) => onGotowe(wynik, { pozwolenie }));
+    void czekajNaPozwolenie().then((pozwolenie) => {
+      if (oczekiwanie.current === moje) onGotowe(wynik, { pozwolenie });
+    });
+  }
+
+  function wstecz() {
+    anulujOczekiwanie();
+    onWstecz();
   }
 
   // Tryb bez mapy (Grey House): dane zebrane, pytamy tylko o kondygnacje, gdy ewidencja ich nie zna.
@@ -179,7 +197,7 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
           <>
             {wyborKondygnacji}
             <div className="ka-nawigacja">
-              <button type="button" className="ka-wstecz" onClick={onWstecz}>← {teksty.wstecz}</button>
+              <button type="button" className="ka-wstecz" onClick={wstecz}>← {teksty.wstecz}</button>
             </div>
           </>
         ) : null}
@@ -246,7 +264,7 @@ export function EkranMapy({ api, adres, teksty, linia, adapterRef, pokazMape, on
             <button type="button" className="ka-btn ka-btn-drugi" onClick={zacznijRysowac}>{teksty.zaznaczeSam}</button>
           </>
         )}
-        <button type="button" className="ka-wstecz" onClick={onWstecz}>← {teksty.wstecz}</button>
+        <button type="button" className="ka-wstecz" onClick={wstecz}>← {teksty.wstecz}</button>
       </div>
       {stan === 'ewidencja' && <p className="ka-stopka">{teksty.notaMapa}</p>}
     </div>
