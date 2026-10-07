@@ -68,7 +68,7 @@ describe('EkranDzialki (cel „dzialka”)', () => {
     let rozwiaz: (p: Pozwolenie | null) => void = () => {};
     const { api, onGotowe } = renderuj(BUDYNEK_PRUSZKOW, { sprawdzPozwolenie: true, pozwolenie: () => new Promise((r) => { rozwiaz = r; }) });
     await screen.findByText('Tak, to moja działka');
-    expect(api.pozwolenie).toHaveBeenCalledWith('142102_1.0010.64/4');
+    await waitFor(() => expect(api.pozwolenie).toHaveBeenCalledWith('142102_1.0010.64/4'));
     fireEvent.click(screen.getByText('Tak, to moja działka'));
     expect((screen.getByText('Chwileczkę…') as HTMLButtonElement).disabled).toBe(true);
     expect(onGotowe).not.toHaveBeenCalled();

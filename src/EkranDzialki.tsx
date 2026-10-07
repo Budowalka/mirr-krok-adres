@@ -105,7 +105,7 @@ export function EkranDzialki({ api, adres, zrodloPunktu, wybrana, teksty, adapte
       )}
       {!laduje && !d && <p className="ka-podpowiedz" role="status">{teksty.brakDanychDzialki}</p>}
       <div className="ka-nawigacja ka-nawigacja-mapa">
-        <button type="button" className="ka-btn ka-btn-glowny" disabled={laduje || czekam} onClick={() => void gotowe()}>
+        <button type="button" className="ka-btn ka-btn-glowny" disabled={laduje || czekam} onClick={gotowe}>
           {czekam ? teksty.sprawdzamy : d ? teksty.toMojaDzialka : teksty.dalej}
         </button>
         <button type="button" className="ka-btn ka-btn-drugi" onClick={wstecz}>{teksty.toNieTaDzialka}</button>
