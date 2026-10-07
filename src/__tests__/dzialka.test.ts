@@ -21,6 +21,12 @@ describe('parsujNumerDzialki', () => {
     ['10 64/4a', { obreb: '10', numer: '64/4a' }],
     ['10 64/4, Pruszków', { obreb: '10', numer: '64/4' }],
     ['10 64/4.', { obreb: '10', numer: '64/4' }],
+    ['dz. 64 obręb 10', { obreb: '10', numer: '64' }],
+    ['działka nr 123, obręb 0005', { obreb: '0005', numer: '123' }],
+    ['nr 1006 obr. 3', { obreb: '3', numer: '1006' }],
+    ['dz. nr ewid. 64/4, obręb 0010', { obreb: '0010', numer: '64/4' }],
+    ['64/4 obręb 10', { obreb: '10', numer: '64/4' }],
+    ['64/4 10', { obreb: '10', numer: '64/4' }],
   ])('„%s" → obręb i numer', (we, wy) => {
     expect(parsujNumerDzialki(we)).toEqual(wy);
   });
