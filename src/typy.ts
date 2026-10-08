@@ -193,7 +193,7 @@ export type Teksty = {
   sprawdzamy: string;
 };
 
-/** Teksty karty „To Twoja budowa?”. Od v0.3.0. */
+/** Teksty karty „To Państwa budowa?”. Od v0.3.0. */
 export type TekstyKartyBudowy = {
   naglowek: string;
   wstep: string;
@@ -208,7 +208,7 @@ export type TekstyKartyBudowy = {
 };
 
 export type KartaBudowyProps = {
-  /** null / undefined = komponent nic nie renderuje (krok „to Twoja budowa?” znika). */
+  /** null / undefined = komponent nic nie renderuje (krok „To Państwa budowa?” znika). */
   pozwolenie: Pozwolenie | null | undefined;
   /** Do linii „Działka 64/4, obręb 0010, Pruszków”; bez niej karta pomija tę linię. */
   dzialka?: { numer: string | null; obreb: string | null; gmina: string | null } | null;

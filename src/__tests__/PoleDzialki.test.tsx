@@ -33,14 +33,14 @@ describe('PoleDzialki', () => {
     enter(pole);
     expect(screen.getByRole('alert').textContent).toContain(DOMYSLNE_TEKSTY.zlyNumerDzialki);
     expect(a.dzialka).not.toHaveBeenCalled();
-    expect(screen.queryByText('Zaznacz na mapie')).toBeNull();
+    expect(screen.queryByText('Wskażę na mapie')).toBeNull();
   });
 
   it('pięć gmin: pyta z obrębem i numerem, lista alfabetycznie po polsku, wybór gminy oddaje działkę', async () => {
     const a = api(async () => PIEC);
     const { pole, onWybrano, container } = renderuj(a);
     wpisz(pole, 'obręb 10, dz. 64/4');
-    fireEvent.click(screen.getByText('Znajdź działkę'));
+    fireEvent.click(screen.getByText('Szukam działki'));
     await screen.findByText('W której gminie jest ta działka?');
     expect(a.dzialka).toHaveBeenCalledWith('10', '64/4');
     expect(Array.from(container.querySelectorAll('.ka-gmina-nazwa')).map((e) => e.textContent)).toEqual(['Grodzisk Mazowiecki', 'Łomianki', 'Pruszków', 'Sochaczew', 'Warszawa']);
@@ -57,13 +57,13 @@ describe('PoleDzialki', () => {
     expect(screen.queryByText('W której gminie jest ta działka?')).toBeNull();
   });
 
-  it('brak działki: komunikat i link „Zaznacz na mapie” (tylko gdy pinezka jest dostępna)', async () => {
+  it('brak działki: komunikat i link „Wskażę na mapie” (tylko gdy pinezka jest dostępna)', async () => {
     const onPinezka = vi.fn();
     const { pole, unmount } = renderuj(api(async () => []), onPinezka);
     wpisz(pole, '10 9999');
     enter(pole);
     expect((await screen.findByRole('alert')).textContent).toContain(DOMYSLNE_TEKSTY.brakDzialki);
-    fireEvent.click(screen.getByText('Zaznacz na mapie'));
+    fireEvent.click(screen.getByText('Wskażę na mapie'));
     expect(onPinezka).toHaveBeenCalled();
     unmount();
 
@@ -71,7 +71,7 @@ describe('PoleDzialki', () => {
     wpisz(b.pole, '10 9999');
     enter(b.pole);
     await screen.findByRole('alert');
-    expect(screen.queryByText('Zaznacz na mapie')).toBeNull();
+    expect(screen.queryByText('Wskażę na mapie')).toBeNull();
   });
 
   it('błąd sieci albo stare proxy (404): komunikat o chwilowym problemie', async () => {
@@ -85,10 +85,10 @@ describe('PoleDzialki', () => {
     let rozwiaz: (l: DzialkaZListy[]) => void = () => {};
     const { pole, onWybrano } = renderuj(api(() => new Promise((r) => { rozwiaz = r; })));
     wpisz(pole, '10 64/4');
-    fireEvent.click(screen.getByText('Znajdź działkę'));
-    expect((screen.getByText('Szukam działki…') as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByText('Szukam działki'));
+    expect((screen.getByText('Szukamy działki…') as HTMLButtonElement).disabled).toBe(true);
     wpisz(pole, '10 65');
-    expect((screen.getByText('Znajdź działkę') as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByText('Szukam działki') as HTMLButtonElement).disabled).toBe(false);
     await act(async () => { rozwiaz([PIEC[1]]); });
     expect(onWybrano).not.toHaveBeenCalled();
     expect(screen.queryByText('W której gminie jest ta działka?')).toBeNull();

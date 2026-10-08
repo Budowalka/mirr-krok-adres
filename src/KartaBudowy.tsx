@@ -5,7 +5,7 @@ import { DOMYSLNE_TEKSTY_KARTY, wstaw } from './teksty';
 import type { KartaBudowyProps } from './typy';
 
 /**
- * Krok „To Twoja budowa?” (spec elektryka, przepływ krok 3): wpis z rejestru pozwoleń dla wskazanej działki.
+ * Krok „To Państwa budowa?” (spec elektryka, przepływ krok 3): wpis z rejestru pozwoleń dla wskazanej działki.
  * Bez danych osobowych i bez kubatury (podpowiedź metrażu jest wyłączona, spec 6.3). Brak wpisu = nic.
  * Landing decyduje, co zapisać: pozwolenieDoFormData(p, true) po „tak”, (p, false) albo nic po „nie”.
  */

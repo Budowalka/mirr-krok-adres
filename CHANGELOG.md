@@ -2,6 +2,15 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/). Wersja = tag git, instalacja `github:Budowalka/mirr-krok-adres#vX.Y.Z`. Wcześniejsze wersje: `git tag -n1`.
 
+## [0.4.0] - 2026-10-08
+
+### Zmienione
+- Wszystkie teksty domyślne (`DOMYSLNE_TEKSTY`, `DOMYSLNE_TEKSTY_KARTY`) i komunikat walidacji adresu w formie grzecznościowej: bezosobowo albo „Państwo”, przyciski w głosie klienta. Decyzja Piotra 08.10.2026. Przykłady: „Podaj adres” → „Adres budowy”, „Zaznacz dom na mapie” → „Zaznaczę dom na mapie”, „Popraw” → „Poprawię”, „Cofnij” → „Cofam ostatni róg”, „Zmień” → „Inny adres”, zakładka „Zaznacz na mapie” → „Wskażę na mapie”, „To Twoja budowa?” → „To Państwa budowa?”, „To Twoja działka?” → „To ta działka?”.
+- Landing, który nadpisuje teksty przez `teksty`, zachowuje swoje brzmienie; zmienia się tylko to, czego nie nadpisuje.
+
+### Dodane
+- Test strażnik: żaden tekst domyślny nie zawiera formy Ty.
+
 ## [0.3.0] - 2026-10-07
 
 ### Dodane

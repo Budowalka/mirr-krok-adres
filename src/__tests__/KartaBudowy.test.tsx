@@ -18,7 +18,7 @@ describe('KartaBudowy', () => {
 
   it('pokazuje datę decyzji słownie, dom i lokale, działkę i nazwę zamierzenia; bez numeru GUNB i kubatury', () => {
     const { container } = render(<KartaBudowy pozwolenie={P} dzialka={DZ} onTak={vi.fn()} onNie={vi.fn()} />);
-    expect(screen.getByRole('heading', { name: 'To Twoja budowa?' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'To Państwa budowa?' })).toBeTruthy();
     for (const tekst of [
       'Pozwolenie na budowę wydane 12 stycznia 2026',
       'Dom jednorodzinny, dwa lokale',

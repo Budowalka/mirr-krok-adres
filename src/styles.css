@@ -80,7 +80,7 @@
 
 /* ── v0.3.0 ─────────────────────────────────────────────────────────────────────────────
    Cele dotyku ≥ 44 × 44 px (spec elektryka 3.0) dla wszystkich przycisków i linków komponentu,
-   także starych („Zmień”, „Wstecz”, „Popraw”) i kontrolek przybliżenia mapy. */
+   także starych („Inny adres”, „Wstecz”, „Poprawię”) i kontrolek przybliżenia mapy. */
 :where(.ka) button, .ka-link, .ka-wstecz { min-height: 44px; min-width: 44px; }
 .ka .leaflet-bar a, .ka .leaflet-touch .leaflet-bar a { width: 44px; height: 44px; line-height: 44px; font-size: 22px; }
 
@@ -105,7 +105,7 @@
 /* Ekran działki */
 .ka-dzialka-opis { grid-column: 1 / -1; text-align: left; font-size: 17px; }
 
-/* Karta „To Twoja budowa?” */
+/* Karta „To Państwa budowa?” */
 .ka-karta-budowy { display: grid; gap: 20px; }
 .ka-karta-glowna { display: flex; flex-direction: column; gap: 14px; background: #fff; border: 1px solid var(--ka-linia); border-radius: var(--ka-promien); padding: 20px; }
 .ka-karta-ikona { width: 72px; height: 72px; color: var(--ka-akcent); }

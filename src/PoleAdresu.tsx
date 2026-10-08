@@ -75,7 +75,7 @@ export function PoleAdresu({ api, bias, teksty, naMapie, onWybrano, onPomin }: P
   async function szukajRecznie() {
     const pelny = `${ulica.trim()} ${miasto.trim()} ${kod.trim()}`.trim();
     if (ulica.trim().length < 3 || miasto.trim().length < 2) {
-      setKomunikat('Wpisz ulicę z numerem i miejscowość.');
+      setKomunikat('Proszę wpisać ulicę z numerem i miejscowość.');
       return;
     }
     setSzukam(true);

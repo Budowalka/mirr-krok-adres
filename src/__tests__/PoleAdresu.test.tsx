@@ -73,11 +73,11 @@ describe('PoleAdresu', () => {
     fireEvent.click(screen.getByText('Nie ma mojego adresu na liście'));
     fireEvent.change(screen.getByPlaceholderText('np. Klonowa 7'), { target: { value: 'Zwierzyniecka 5' } });
     fireEvent.change(screen.getByPlaceholderText('np. Sosnowiec'), { target: { value: 'Sochaczew' } });
-    fireEvent.click(screen.getByText('Znajdź na mapie'));
+    fireEvent.click(screen.getByText('Szukam na mapie'));
     await waitFor(() => expect(onWybrano).toHaveBeenCalledWith(expect.objectContaining({ zrodlo: 'reczny', miasto: 'Sochaczew', numer: '5' })));
 
     fireEvent.change(screen.getByPlaceholderText('np. Klonowa 7'), { target: { value: 'Nieistniejąca 99' } });
-    fireEvent.click(screen.getByText('Znajdź na mapie'));
+    fireEvent.click(screen.getByText('Szukam na mapie'));
     await waitFor(() => expect(onPomin).toHaveBeenCalledWith(DOMYSLNE_TEKSTY.nieZnaleziono));
   });
 
@@ -92,7 +92,7 @@ describe('PoleAdresu', () => {
     const pole = screen.getByPlaceholderText('Ulica i numer, np. Klonowa 7') as HTMLInputElement;
     fireEvent.change(pole, { target: { value: 'franciszka brze' } });
     await act(async () => { vi.advanceTimersByTime(300); await Promise.resolve(); });
-    expect(screen.getByText('dopisz numer domu')).toBeTruthy();
+    expect(screen.getByText('trzeba dopisać numer domu')).toBeTruthy();
     fireEvent.click(screen.getByRole('option'));
     expect(onWybrano).not.toHaveBeenCalled();
     expect(pole.value).toBe('Franciszka Brzezińskiego ');

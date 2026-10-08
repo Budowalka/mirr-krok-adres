@@ -57,7 +57,7 @@ describe('KrokAdresu', () => {
     expect(onPomin).toHaveBeenCalled();
   });
 
-  it('„Zmień” w pigułce wraca do pola adresu, czyści obrys i odlatuje na obszar firmy', async () => {
+  it('„Inny adres” w pigułce wraca do pola adresu, czyści obrys i odlatuje na obszar firmy', async () => {
     const adapter = new FalszywyAdapterMapy();
     render(<KrokAdresu api="/api/geo" onGotowe={vi.fn()} onPomin={vi.fn()} adapterMapy={() => adapter} />);
     fireEvent.change(screen.getByPlaceholderText('Ulica i numer, np. Klonowa 7'), { target: { value: 'Klonowa 7' } });
@@ -65,8 +65,8 @@ describe('KrokAdresu', () => {
     fireEvent.click(screen.getByRole('option'));
     vi.useRealTimers();
     await screen.findByText('Zgadza się, dalej');
-    fireEvent.click(screen.getByText('Zmień'));
-    expect(screen.getByText('Podaj adres')).toBeTruthy();
+    fireEvent.click(screen.getByText('Inny adres'));
+    expect(screen.getByText('Adres budowy')).toBeTruthy();
     expect(adapter.obrys).toBeNull();
     expect(adapter.zoom).toBe(6);
     expect(adapter.zniszczony).toBe(false);

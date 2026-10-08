@@ -49,19 +49,19 @@ describe('KrokAdresu v0.3.0: wejścia, cel i pozwolenie', () => {
     const onGotowe = vi.fn();
     const adapter = new FalszywyAdapterMapy();
     render(<KrokAdresu api="/api/geo" wejscia={['adres', 'pinezka', 'numer_dzialki']} cel="dzialka" sprawdzPozwolenie onGotowe={onGotowe} onPomin={vi.fn()} adapterMapy={() => adapter} />);
-    expect(zakladki().map((z) => z.textContent)).toEqual(['Adres', 'Zaznacz na mapie', 'Numer działki']);
+    expect(zakladki().map((z) => z.textContent)).toEqual(['Adres', 'Wskażę na mapie', 'Numer działki']);
     expect(wybrana()).toBe('Adres');
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Zaznacz na mapie' }));
-    expect(screen.getByRole('heading', { name: 'Zaznacz swoją działkę' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: 'Wskażę na mapie' }));
+    expect(screen.getByRole('heading', { name: 'Gdzie jest działka?' })).toBeTruthy();
     expect(adapter.wybieranie).toBeTypeOf('function');
-    expect((screen.getByText('Dotknij mapy, żeby postawić pinezkę.') as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByText('Pinezka pojawi się po dotknięciu mapy.') as HTMLButtonElement).disabled).toBe(true);
 
     act(() => adapter.dotknij(PRUSZKOW));
     expect(adapter.pinezka).toEqual(PRUSZKOW);
     fireEvent.click(screen.getByText('To tutaj, dalej'));
     expect(adapter.wybieranie).toBeNull();
-    expect(screen.getByRole('heading', { name: 'To Twoja działka?' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'To ta działka?' })).toBeTruthy();
     expect(screen.queryByRole('tablist')).toBeNull();
 
     await screen.findByText('Działka 64/4, obręb 0010, Pruszków');
@@ -82,7 +82,7 @@ describe('KrokAdresu v0.3.0: wejścia, cel i pozwolenie', () => {
     const adapter = new FalszywyAdapterMapy();
     render(<KrokAdresu api="/api/geo" wejscia={['adres', 'numer_dzialki']} cel="dzialka" onGotowe={onGotowe} onPomin={vi.fn()} adapterMapy={() => adapter} />);
     fireEvent.click(screen.getByRole('tab', { name: 'Numer działki' }));
-    expect(screen.getByRole('heading', { name: 'Podaj numer działki' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Jaki numer ma działka?' })).toBeTruthy();
     const pole = screen.getByPlaceholderText('np. Dobra 1006');
     fireEvent.change(pole, { target: { value: '10 64/4' } });
     fireEvent.keyDown(pole, { key: 'Enter' });
@@ -112,16 +112,16 @@ describe('KrokAdresu v0.3.0: wejścia, cel i pozwolenie', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  it('„Zmień” po pinezce: ta sama zakładka, pinezka zdjęta, tryb pinezki znów włączony, widok zostaje przy działce', async () => {
+  it('„Inny adres” po pinezce: ta sama zakładka, pinezka zdjęta, tryb pinezki znów włączony, widok zostaje przy działce', async () => {
     const adapter = new FalszywyAdapterMapy();
     render(<KrokAdresu api="/api/geo" wejscia={['adres', 'pinezka']} cel="dzialka" onGotowe={vi.fn()} onPomin={vi.fn()} adapterMapy={() => adapter} />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Zaznacz na mapie' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Wskażę na mapie' }));
     act(() => adapter.dotknij(PRUSZKOW));
     fireEvent.click(screen.getByText('To tutaj, dalej'));
     await screen.findByText('Tak, to moja działka');
-    fireEvent.click(screen.getByText('Zmień'));
-    expect(screen.getByRole('heading', { name: 'Zaznacz swoją działkę' })).toBeTruthy();
-    expect(wybrana()).toBe('Zaznacz na mapie');
+    fireEvent.click(screen.getByText('Inny adres'));
+    expect(screen.getByRole('heading', { name: 'Gdzie jest działka?' })).toBeTruthy();
+    expect(wybrana()).toBe('Wskażę na mapie');
     expect(adapter.pinezka).toBeNull();
     expect(adapter.dzialka).toBeNull();
     expect(adapter.wybieranie).toBeTypeOf('function');
@@ -142,8 +142,8 @@ describe('KrokAdresu v0.3.0: wejścia, cel i pozwolenie', () => {
 
   it('pierwsza pozycja z „wejscia” jest domyślną zakładką', () => {
     render(<KrokAdresu api="/api/geo" wejscia={['pinezka', 'adres']} onGotowe={vi.fn()} onPomin={vi.fn()} adapterMapy={() => new FalszywyAdapterMapy()} />);
-    expect(wybrana()).toBe('Zaznacz na mapie');
-    expect(screen.getByRole('heading', { name: 'Zaznacz swoją działkę' })).toBeTruthy();
+    expect(wybrana()).toBe('Wskażę na mapie');
+    expect(screen.getByRole('heading', { name: 'Gdzie jest działka?' })).toBeTruthy();
   });
 
   it('bez mapy pinezka znika z zakładek; jedno pozostałe wejście = brak zakładek', () => {
@@ -166,7 +166,7 @@ describe('KrokAdresu v0.3.0: wejścia, cel i pozwolenie', () => {
     render(<KrokAdresu api="/api/geo" wejscia={['pinezka']} onGotowe={vi.fn()} onPomin={vi.fn()} adapterMapy={() => adapter} />);
     act(() => adapter.dotknij(PRUSZKOW));
     fireEvent.click(screen.getByText('To tutaj, dalej'));
-    await screen.findByText('Zaznacz dom na mapie');
+    await screen.findByText('Zaznaczę dom na mapie');
     expect(screen.getByRole('heading', { name: 'To ten dom?' })).toBeTruthy();
     expect(zapytanieBudynku().searchParams.has('miasto')).toBe(false);
   });
@@ -179,13 +179,13 @@ describe('KrokAdresu v0.3.0: wejścia, cel i pozwolenie', () => {
     expect(korzen.querySelector('.ka-bok [role="tablist"]')).toBeTruthy();
   });
 
-  it('kliknięcie aktywnej zakładki „Zaznacz na mapie” nie zdejmuje postawionej pinezki', () => {
+  it('kliknięcie aktywnej zakładki „Wskażę na mapie” nie zdejmuje postawionej pinezki', () => {
     const adapter = new FalszywyAdapterMapy();
     render(<KrokAdresu api="/api/geo" wejscia={['adres', 'pinezka']} cel="dzialka" onGotowe={vi.fn()} onPomin={vi.fn()} adapterMapy={() => adapter} />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Zaznacz na mapie' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Wskażę na mapie' }));
     act(() => adapter.dotknij(PRUSZKOW));
-    fireEvent.click(screen.getByRole('tab', { name: 'Zaznacz na mapie' }));
-    expect(wybrana()).toBe('Zaznacz na mapie');
+    fireEvent.click(screen.getByRole('tab', { name: 'Wskażę na mapie' }));
+    expect(wybrana()).toBe('Wskażę na mapie');
     expect(adapter.pinezka).toEqual(PRUSZKOW);
     expect((screen.getByText('To tutaj, dalej') as HTMLButtonElement).disabled).toBe(false);
   });

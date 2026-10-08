@@ -56,7 +56,7 @@ function renderuj(odpowiedz: OdpowiedzBudynek | Error, props: Partial<Parameters
 describe('EkranMapy', () => {
   it('dom z ewidencji: obrys na mapie, panel z obwodem, rzutem i kondygnacjami; „Zgadza się” zwraca pełny kontrakt', async () => {
     const { adapter, onGotowe, api } = renderuj(EWIDENCJA, { linia: (c) => ({ etykieta: 'Elewacja', wartosc: `ok. ${Math.round((c.obwod_m ?? 0) * (c.kondygnacje ?? 0) * 3)} m²` }) });
-    expect(screen.getByText('Szukamy Twojego domu w ewidencji budynków…')).toBeTruthy();
+    expect(screen.getByText('Szukamy domu w ewidencji budynków…')).toBeTruthy();
     await screen.findByText('Zgadza się, dalej');
     expect((api.budynek as ReturnType<typeof vi.fn>).mock.calls[0]).toEqual([52.2705286, 20.2888357, { miasto: 'Sochaczew', ulica: 'Zwierzyniecka', numer: '5' }]);
     expect(adapter.obrys).toEqual(OBRYS_198);
@@ -80,10 +80,10 @@ describe('EkranMapy', () => {
     expect(wynik.adres).toMatchObject({ gmina: 'Sochaczew (miasto)', powiat: 'powiat sochaczewski', wojewodztwo: 'mazowieckie', teryt_gmina: '142801', simc: '0977120', ulic: '26305', kod: '96-500' });
   });
 
-  it('„Popraw” pozwala zmienić kondygnacje i oznacza je jako podane ręcznie', async () => {
+  it('„Poprawię” pozwala zmienić kondygnacje i oznacza je jako podane ręcznie', async () => {
     const { onGotowe } = renderuj(EWIDENCJA);
-    await screen.findByText('Popraw');
-    fireEvent.click(screen.getByText('Popraw'));
+    await screen.findByText('Poprawię');
+    fireEvent.click(screen.getByText('Poprawię'));
     fireEvent.click(screen.getByText('Parter i piętro'));
     expect(screen.getByText('2, parter i piętro')).toBeTruthy();
     fireEvent.click(screen.getByText('Zgadza się, dalej'));
@@ -92,9 +92,9 @@ describe('EkranMapy', () => {
 
   it('brak obrysu: tekst o ręcznym zaznaczeniu, rysowanie po rogach, pytanie o kondygnacje, wynik „reczne” bez identyfikatora', async () => {
     const { adapter, onGotowe } = renderuj(BRAK);
-    await screen.findByText('Zaznacz dom na mapie');
+    await screen.findByText('Zaznaczę dom na mapie');
     expect(screen.getByText(DOMYSLNE_TEKSTY.brakObrysu)).toBeTruthy();
-    fireEvent.click(screen.getByText('Zaznacz dom na mapie'));
+    fireEvent.click(screen.getByText('Zaznaczę dom na mapie'));
     expect(adapter.rysowanie).toBeTypeOf('function');
     act(() => adapter.zakonczRysowanie(PROSTOKAT));
     expect(adapter.obrys).toEqual(PROSTOKAT);
@@ -119,8 +119,8 @@ describe('EkranMapy', () => {
 
   it('po narysowaniu rogi da się przesuwać: zmiana z adaptera przelicza obwód i rzut, a wynik ma nowy obrys', async () => {
     const { adapter, onGotowe } = renderuj(BRAK);
-    await screen.findByText('Zaznacz dom na mapie');
-    fireEvent.click(screen.getByText('Zaznacz dom na mapie'));
+    await screen.findByText('Zaznaczę dom na mapie');
+    fireEvent.click(screen.getByText('Zaznaczę dom na mapie'));
     act(() => adapter.zakonczRysowanie(PROSTOKAT));
     expect(adapter.edycjaWlaczona).toBe(true);
     expect(screen.getByText(DOMYSLNE_TEKSTY.przeciagnijRogi)).toBeTruthy();
@@ -134,20 +134,20 @@ describe('EkranMapy', () => {
     expect(w.zrodlo_obrysu).toBe('reczne');
   });
 
-  it('„Zaznaczę samodzielnie” z obrysem z ewidencji przechodzi do rysowania, „Cofnij” wraca do obrysu z ewidencji', async () => {
+  it('„Zaznaczę samodzielnie” z obrysem z ewidencji przechodzi do rysowania, „Cofam ostatni róg” wraca do obrysu z ewidencji', async () => {
     const { adapter } = renderuj(EWIDENCJA);
     await screen.findByText('Zaznaczę samodzielnie');
     fireEvent.click(screen.getByText('Zaznaczę samodzielnie'));
     expect(adapter.obrys).toBeNull();
     expect(screen.getByText(DOMYSLNE_TEKSTY.rysowanie)).toBeTruthy();
-    fireEvent.click(screen.getByText('Cofnij'));
+    fireEvent.click(screen.getByText('Cofam ostatni róg'));
     expect(adapter.obrys).toEqual(OBRYS_198);
     expect(screen.getByText('Zgadza się, dalej')).toBeTruthy();
   });
 
   it('awaria API to stan „brak”, a „Wolę podać powierzchnię ręcznie” woła onPomin', async () => {
     const { onPomin } = renderuj(new Error('502'));
-    await screen.findByText('Zaznacz dom na mapie');
+    await screen.findByText('Zaznaczę dom na mapie');
     fireEvent.click(screen.getByText('Wolę podać powierzchnię ręcznie'));
     expect(onPomin).toHaveBeenCalled();
   });
@@ -223,9 +223,9 @@ describe('EkranMapy: v0.3.0 (źródło punktu, wybrana działka, pozwolenie)', (
 
   it('awaria ewidencji przy wybranej działce: działka z listy zostaje na mapie i w wyniku', async () => {
     const { adapter, onGotowe } = renderujV3(new Error('502'), { wybrana: WYBRANA, zrodloPunktu: 'numer_dzialki' });
-    await screen.findByText('Zaznacz dom na mapie');
+    await screen.findByText('Zaznaczę dom na mapie');
     expect(adapter.dzialka).toEqual(PROSTOKAT);
-    fireEvent.click(screen.getByText('Zaznacz dom na mapie'));
+    fireEvent.click(screen.getByText('Zaznaczę dom na mapie'));
     act(() => adapter.zakonczRysowanie(PROSTOKAT));
     fireEvent.click(screen.getByText('Parter'));
     fireEvent.click(screen.getByText('Dalej'));
@@ -274,12 +274,12 @@ describe('EkranMapy: v0.3.0 (źródło punktu, wybrana działka, pozwolenie)', (
     expect(screen.queryByText(DOMYSLNE_TEKSTY.dalej)).not.toBeNull();
   });
 
-  it('„Popraw” i zmiana kondygnacji w trakcie czekania: stary wynik nie jest oddawany, nowy ma nowe kondygnacje', async () => {
+  it('„Poprawię” i zmiana kondygnacji w trakcie czekania: stary wynik nie jest oddawany, nowy ma nowe kondygnacje', async () => {
     const { onGotowe, rozwiaz } = zWolnymPozwoleniem();
     await screen.findByText('Zgadza się, dalej');
     fireEvent.click(screen.getByText('Zgadza się, dalej'));
     expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).not.toBeNull();
-    fireEvent.click(screen.getByText('Popraw'));
+    fireEvent.click(screen.getByText('Poprawię'));
     expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).toBeNull();
     fireEvent.click(screen.getByText('Parter i piętro'));
     await rozwiaz();
@@ -295,7 +295,7 @@ describe('EkranMapy: v0.3.0 (źródło punktu, wybrana działka, pozwolenie)', (
   it('wybór kondygnacji w trakcie czekania (opcje otwarte przed „dalej”): stary wynik nie jest oddawany', async () => {
     const { onGotowe, rozwiaz } = zWolnymPozwoleniem();
     await screen.findByText('Zgadza się, dalej');
-    fireEvent.click(screen.getByText('Popraw'));
+    fireEvent.click(screen.getByText('Poprawię'));
     fireEvent.click(screen.getByText('Zgadza się, dalej'));
     expect(screen.queryByText(DOMYSLNE_TEKSTY.sprawdzamy)).not.toBeNull();
     fireEvent.click(screen.getByText('Dwa piętra lub więcej'));

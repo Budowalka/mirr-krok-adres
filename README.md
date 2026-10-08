@@ -33,7 +33,7 @@ Od v0.3.0 dochodzą GET /api/v1/geo/dzialka (scope geo:dzialka) i GET /api/v1/ge
 ## Instalacja w landingu (Next 15, React 19)
 
 ```bash
-npm i github:Budowalka/mirr-krok-adres#v0.3.0 leaflet @geoman-io/leaflet-geoman-free
+npm i github:Budowalka/mirr-krok-adres#v0.4.0 leaflet @geoman-io/leaflet-geoman-free
 ```
 
 `next.config.ts`:
@@ -86,7 +86,7 @@ Wszystko włącza się propsami; bez nich krok działa jak v0.2 (pilnuje tego `s
 | Prop | Domyślnie | Co robi |
 |---|---|---|
 | `wejscia` | `['adres']` | Zakładki: `'adres'`, `'pinezka'` (dotknięcie mapy; wymaga mapy), `'numer_dzialki'` („10 64/4” → wybór gminy). Pierwsza pozycja = domyślna zakładka. |
-| `cel` | `'budynek'` | `'dzialka'`: po wskazaniu miejsca ekran „To Twoja działka?” bez rysowania domu i bez pytania o kondygnacje. |
+| `cel` | `'budynek'` | `'dzialka'`: po wskazaniu miejsca ekran „To ta działka?” bez rysowania domu i bez pytania o kondygnacje. |
 | `sprawdzPozwolenie` | `false` | Po znalezieniu działki krok pyta o pozwolenie na budowę (czeka najwyżej 3 s po kliknięciu) i oddaje je w drugim argumencie `onGotowe(wynik, { pozwolenie })`. |
 | `szeroko` | `false` | Od 900 px mapa po lewej, pytania i przyciski po prawej. |
 

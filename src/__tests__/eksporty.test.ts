@@ -6,13 +6,13 @@ describe('publiczne API paczki', () => {
     for (const nazwa of ['KrokAdresu', 'opisKondygnacji', 'doEpsg2180', 'doGeoJson', 'obwodM', 'rzutM2', 'zGeoJson', 'utworzAdapterLeaflet'] as const) {
       expect(typeof paczka[nazwa]).toBe('function');
     }
-    expect(paczka.DOMYSLNE_TEKSTY.naglowekAdres).toBe('Podaj adres');
+    expect(paczka.DOMYSLNE_TEKSTY.naglowekAdres).toBe('Adres budowy');
   });
 
   it('eksportuje klocki v0.3.0', () => {
     for (const nazwa of ['KartaBudowy', 'utworzApi', 'parsujNumerDzialki', 'opisDzialki', 'pozwolenieDoFormData', 'dataSlownie'] as const) {
       expect(typeof paczka[nazwa]).toBe('function');
     }
-    expect(paczka.DOMYSLNE_TEKSTY_KARTY.naglowek).toBe('To Twoja budowa?');
+    expect(paczka.DOMYSLNE_TEKSTY_KARTY.naglowek).toBe('To Państwa budowa?');
   });
 });

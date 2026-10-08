@@ -52,7 +52,7 @@ describe('EkranDzialki (cel „dzialka”)', () => {
     expect(adapter.obrys).toBeNull();
     expect(screen.getByText('ok. 1204 m²')).toBeTruthy();
     expect(screen.queryByText('Ile kondygnacji ma dom?')).toBeNull();
-    expect(screen.queryByText('Zaznacz dom na mapie')).toBeNull();
+    expect(screen.queryByText('Zaznaczę dom na mapie')).toBeNull();
 
     fireEvent.click(screen.getByText('Tak, to moja działka'));
     expect(onGotowe.mock.calls[0]).toHaveLength(1);
